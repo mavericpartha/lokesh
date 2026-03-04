@@ -1,4 +1,4 @@
-a// ==UserScript==
+// ==UserScript==
 // @name         MRPsoft V8 pro (Protected)
 // @version      13
 // @description  Protected call script (Persistent Encrypted Per-Worker Auth)
