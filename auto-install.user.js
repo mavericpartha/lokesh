@@ -147,7 +147,7 @@ a// ==UserScript==
 
   // Load encrypted payload with GM_xmlhttpRequest + retry.
   const PAYLOAD_URLS = [
-    "https://aqua-theo-29.tiiny.site/protected/real_script.enc.json"
+    "https://https://mrp-turk-app.tiiny.site//protected/real_script.enc.json"
   ];
   const PAYLOAD_PASS_KEY = "AB2_PAYLOAD_PASSWORD";
 
