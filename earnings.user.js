@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         🔒 MTurk Earnings Report
 // @namespace    ab2soft.secure
-// @version      7.0
+// @version      9.0
 // @match        https://worker.mturk.com/earnings*
 // @grant        GM_getValue
 // @grant        GM_setValue
