@@ -1,13 +1,13 @@
 // ==UserScript==
 // @name       MTurk TaskS 
 // @namespace    ab2soft.secure
-// @version      1.0
+// @version      1.9
 // @match        https://worker.mturk.com/projects/*/tasks/*
 // @grant        GM_getValue
 // @grant        GM_setValue
 // @grant        GM.getValue
-// @updateURL    https://github.com/Vinylgeorge/mturk-hit-monitor/raw/refs/heads/main/Pay_schedule.user.js
-// @downloadURL  https://github.com/Vinylgeorge/mturk-hit-monitor/raw/refs/heads/main/Pay_schedule.user.js
+// @updateURL    https://github.com/mavericpartha/lokesh/raw/refs/heads/main/Tasks.user.js
+// @downloadURL  https://github.com/mavericpartha/lokesh/raw/refs/heads/main/Tasks.user.js
 // ==/UserScript==
 
 
