@@ -1,394 +1,351 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<title>💰 MTurk Earnings Monitor (Single Sheet)</title>
+// ==UserScript==
+// @name         🔒 MTurk Earnings Report
+// @namespace    ab2soft.secure
+// @version      7.0
+// @match        https://worker.mturk.com/earnings*
+// @grant        GM_getValue
+// @grant        GM_setValue
+// ==/UserScript==
 
-<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+(async () => {
+  'use strict';
 
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { initializeFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  // -------------------------
+  // CONFIG
+  // -------------------------
+  const SHEET_CSV = 'https://docs.google.com/spreadsheets/d/1RU_hAAxyza7cxpyce6-ePCuUQh52VmW9EgcTqli1oA8/export?format=csv&gid=0';
+  const FIREBASE_APP_JS = 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+  const FIRESTORE_JS = 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
-/* ================= FIREBASE ================= */
-const earningsApp = initializeApp({
-  apiKey: "AIzaSyBTFpM3fs7kWBrZL4yOi9tquUTp1HhH7L8",
-  authDomain: "mturk-monitordeep.firebaseapp.com",
-  projectId: "mturk-monitordeep",
-  storageBucket: "mturk-monitordeep.firebasestorage.app",
-  messagingSenderId: "505786000194",
-  appId: "1:505786000194:web:40b9c9df75d3125f3a99cd"
-}, "earningsApp");
-
-const db = initializeFirestore(earningsApp, {
-  experimentalForceLongPolling: true,
-  useFetchStreams: false
-});
-
-/* ================= STORAGE ================= */
-const CACHE_KEY = "earnings_cache_data";
-const SYNC_KEY  = "earnings_last_sync";
-const TRANSFERS_KEY = "earnings_transfers_cache";
-
-/* ================= HELPERS ================= */
-const todayStr = () => new Date().toISOString().slice(0,10);
-const needsSync = () => localStorage.getItem(SYNC_KEY) !== todayStr();
-const markSynced = () => localStorage.setItem(SYNC_KEY, todayStr());
-
-function parseDate(v){
-  if(!v) return null;
-
-  // Firestore Timestamp object: {seconds, nanoseconds} or has toDate()
-  if (typeof v === "object") {
-    if (typeof v.toDate === "function") {
-      const d = v.toDate();
-      return isNaN(d) ? null : d;
-    }
-    if (typeof v.seconds === "number") {
-      const d = new Date(v.seconds * 1000);
-      return isNaN(d) ? null : d;
-    }
-  }
-
-  // Date object
-  if (v instanceof Date) return isNaN(v) ? null : v;
-
-  if (typeof v === "string") {
-    let s = v.trim();
-    if (!s) return null;
-
-    // remove commas and normalize multiple spaces
-    s = s.replace(/,/g, " ").replace(/\s+/g, " ");
-
-    // If it already looks like ISO (YYYY-MM-DD...), let Date handle
-    if (/^\d{4}-\d{2}-\d{2}/.test(s)) {
-      const d = new Date(s);
-      return isNaN(d) ? null : d;
-    }
-
-    // Handle DD/MM/YYYY or MM/DD/YYYY (+ optional time)
-    // Examples: "04/02/2026", "4/2/2026 10:05:00"
-    const m1 = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})(?:\s+(\d{1,2}):(\d{2})(?::(\d{2}))?)?$/);
-    if (m1) {
-      const a = parseInt(m1[1], 10);
-      const b = parseInt(m1[2], 10);
-      const yyyy = parseInt(m1[3], 10);
-      const hh = parseInt(m1[4] || "0", 10);
-      const mm = parseInt(m1[5] || "0", 10);
-      const ss = parseInt(m1[6] || "0", 10);
-
-      // Decide whether it's DD/MM or MM/DD:
-      // - If first part > 12 => definitely DD/MM
-      // - Else if second part > 12 => definitely MM/DD
-      // - Else default to DD/MM (India-friendly)
-      let dd, mon;
-      if (a > 12) { dd = a; mon = b; }
-      else if (b > 12) { dd = b; mon = a; }
-      else { dd = a; mon = b; } // default DD/MM
-
-      const d = new Date(yyyy, mon - 1, dd, hh, mm, ss);
-      return isNaN(d) ? null : d;
-    }
-
-    // Handle DD-MM-YYYY (+ optional time) OR YYYY-MM-DD already handled above
-    // Examples: "04-02-2026", "4-2-2026 09:00"
-    const m2 = s.match(/^(\d{1,2})-(\d{1,2})-(\d{4})(?:\s+(\d{1,2}):(\d{2})(?::(\d{2}))?)?$/);
-    if (m2) {
-      const dd = parseInt(m2[1], 10);
-      const mon = parseInt(m2[2], 10);
-      const yyyy = parseInt(m2[3], 10);
-      const hh = parseInt(m2[4] || "0", 10);
-      const mm = parseInt(m2[5] || "0", 10);
-      const ss = parseInt(m2[6] || "0", 10);
-      const d = new Date(yyyy, mon - 1, dd, hh, mm, ss);
-      return isNaN(d) ? null : d;
-    }
-
-    // Fallback (last resort)
-    const d = new Date(s);
-    return isNaN(d) ? null : d;
-  }
-
-  return null;
-}
-
-function dateOnly(d){
-  if(!d) return null;
-  return new Date(d.getFullYear(), d.getMonth(), d.getDate());
-}
-function inRange(d, fromD, toD){
-  if(!d) return false;
-  const x = dateOnly(d).getTime();
-  const a = fromD ? dateOnly(fromD).getTime() : -Infinity;
-  const b = toD ? dateOnly(toD).getTime() : Infinity;
-  return x >= a && x <= b;
-}
-function fmt(d){
-  const x = parseDate(d);
-  return x ? x.toLocaleDateString() : (d || "—");
-}
-
-function getDocAnyDate(d){
-  // If your earnings_logs docs contain any “updated” / “date” / “created” fields,
-  // we will use them for date filtering of the Qualified rows.
-  // If none exist, Qualified rows will still appear based on currentEarnings only.
-  return (
-    parseDate(d.date) ||
-    parseDate(d.updatedAt) ||
-    parseDate(d.updated_on) ||
-    parseDate(d.lastUpdated) ||
-    parseDate(d.createdAt) ||
-    parseDate(d.ts) ||
-    parseDate(d.timestamp) ||
-    null
-  );
-}
-
-/* ================= TEAM CSV ================= */
-async function loadTeam(){
-  const res = await fetch("https://docs.google.com/spreadsheets/d/1RU_hAAxyza7cxpyce6-ePCuUQh52VmW9EgcTqli1oA8/export?format=csv&gid=0");
-  const rows = (await res.text()).split("\n").slice(1);
-  const users=new Set(), workers=new Set();
-  rows.forEach(r=>{
-    const [u,w]=r.split(",");
-    if(u) users.add(u.trim());
-    if(w) workers.add(w.trim());
-  });
-  return {users,workers};
-}
-
-/* ================= FIRESTORE ================= */
-async function fetchFS(){
-  const snap = await getDocs(collection(db,"earnings_logs"));
-  const arr=[];
-  snap.forEach(d=>arr.push({id:d.id,...d.data()}));
-  localStorage.setItem(CACHE_KEY,JSON.stringify(arr));
-  markSynced();
-  return arr;
-}
-const loadFS = ()=>JSON.parse(localStorage.getItem(CACHE_KEY)||"[]");
-
-/* ================= TRANSFER CACHE ================= */
-const loadTransfers=()=>JSON.parse(localStorage.getItem(TRANSFERS_KEY)||"[]");
-const saveTransfers=a=>localStorage.setItem(TRANSFERS_KEY,JSON.stringify(a));
-
-function refreshTransfers(docs,users,workers){
-  // keep your existing cache behavior, but we’ll still filter by From/To later
-  let cache = loadTransfers();
-
-  for(const d of docs){
-    const user=(d.user||"").trim();
-    const wid=(d.workerId||d.id||"").trim();
-    if(!users.has(user)&&!workers.has(wid)) continue;
-
-    const amt=+d.lastTransferAmount||0;
-    const dt=d.lastTransferDate;
-    if(amt<=0 || !dt) continue;
-
-    if(!cache.some(x=>x.user===user&&x.workerId===wid&&x.amount===amt&&x.date===dt)){
-      cache.push({user,workerId:wid,amount:amt,date:dt});
-    }
-  }
-  saveTransfers(cache);
-  return cache;
-}
-
-/* ================= BUILD SINGLE SHEET ================= */
-function getFromTo(){
-  const from = parseDate(document.getElementById("fromDate").value);
-  const to   = parseDate(document.getElementById("toDate").value);
-  return {from, to};
-}
-
-function buildSingleTable(docs, transfers, users, workers){
-  const {from, to} = getFromTo();
-
-  const rows = [];
-  const seen = new Set();
-
-  // 1) Qualified (currentEarnings >= 8)
-  for (const d of docs){
-    const user=(d.user||"").trim();
-    const wid=(d.workerId||d.id||"").trim();
-    if(!users.has(user)&&!workers.has(wid)) continue;
-
-    const cur = +d.currentEarnings || 0;
-    if (cur < 8) continue;
-
-    // If your doc has a usable date field, filter it by From/To.
-    // If there is NO doc date field, we include it (since it's “current” qualification).
-    const docDate = getDocAnyDate(d);
-    const okByDate = docDate ? inRange(docDate, from, to) : true;
-    if (!okByDate) continue;
-
-    const key = `Q|${user}|${wid}`;
-    if (seen.has(key)) continue;
-    seen.add(key);
-
-    rows.push({
-      Type: "Qualified (Current ≥ 8)",
-      User: user,
-      "Worker ID": wid,
-      Amount: cur,
-      Date: docDate ? fmt(docDate) : "—",
-      "Transfer Date": "—",
-      "Next Transfer": d.nextTransferDate || "—"
-    });
-  }
-
-  // 2) Transferred (lastTransferDate in From/To)
-  for (const t of transfers){
-    const user=(t.user||"").trim();
-    const wid=(t.workerId||"").trim();
-    if(!users.has(user)&&!workers.has(wid)) continue;
-
-    const dt = parseDate(t.date);
-    if (!inRange(dt, from, to)) continue;
-
-    const amt = +t.amount || 0;
-    const key = `T|${user}|${wid}|${amt}|${t.date}`;
-    if (seen.has(key)) continue;
-    seen.add(key);
-
-    rows.push({
-      Type: "Transferred",
-      User: user,
-      "Worker ID": wid,
-      Amount: amt,
-      Date: "—",
-      "Transfer Date": fmt(dt),
-      "Next Transfer": "—"
-    });
-  }
-
-  // sort: transfers first by date desc, then qualified by amount desc
-  rows.sort((a,b)=>{
-    const aTd = parseDate(a["Transfer Date"]);
-    const bTd = parseDate(b["Transfer Date"]);
-    if (a.Type !== b.Type) return a.Type === "Transferred" ? -1 : 1;
-    if (a.Type === "Transferred") return (bTd?.getTime()||0) - (aTd?.getTime()||0);
-    return (+b.Amount||0) - (+a.Amount||0);
-  });
-
-  // render
-  const tb = document.getElementById("single-body");
-  tb.innerHTML = "";
-  for (const r of rows){
-    tb.innerHTML += `
-      <tr>
-        <td>${r.Type}</td>
-        <td>${r.User}</td>
-        <td>${r["Worker ID"]}</td>
-        <td><b>${(+r.Amount).toFixed(2)}</b></td>
-        <td>${r.Date}</td>
-        <td>${r["Transfer Date"]}</td>
-        <td>${r["Next Transfer"]}</td>
-      </tr>`;
-  }
-
-  // totals
-  const tCount = rows.filter(x=>x.Type==="Transferred").length;
-  const qCount = rows.filter(x=>x.Type!=="Transferred").length;
-  const tSum = rows.filter(x=>x.Type==="Transferred").reduce((s,x)=>s+(+x.Amount||0),0);
-  const qSum = rows.filter(x=>x.Type!=="Transferred").reduce((s,x)=>s+(+x.Amount||0),0);
-
-  document.getElementById("summary").innerHTML =
-    `From <b>${document.getElementById("fromDate").value || "—"}</b> to <b>${document.getElementById("toDate").value || "—"}</b> →
-     Qualified: <b>${qCount}</b> ($${qSum.toFixed(2)}) |
-     Transferred: <b>${tCount}</b> ($${tSum.toFixed(2)}) |
-     Total rows: <b>${rows.length}</b>`;
-}
-
-function exportSingle(){
-  const table = document.getElementById("single-table");
-  const wb = XLSX.utils.book_new();
-  const ws = XLSX.utils.table_to_sheet(table);
-  XLSX.utils.book_append_sheet(wb, ws, "Qualified_And_Transferred");
-
-  const from = document.getElementById("fromDate").value || "NA";
-  const to = document.getElementById("toDate").value || "NA";
-  XLSX.writeFile(wb, `MTurk_${from}_to_${to}_single_sheet.xlsx`);
-}
-
-/* ================= MAIN ================= */
-let _docs = [];
-let _transfers = [];
-let _team = null;
-
-async function build(){
-  _team = await loadTeam();
-  _docs = needsSync() ? await fetchFS() : loadFS();
-  _transfers = refreshTransfers(_docs, _team.users, _team.workers);
-
-  buildSingleTable(_docs, _transfers, _team.users, _team.workers);
-}
-
-window.addEventListener("DOMContentLoaded",()=>{
-  // default dates: this month (1st → today)
-  const now = new Date();
-  const first = new Date(now.getFullYear(), now.getMonth(), 1);
-  document.getElementById("fromDate").value = first.toISOString().slice(0,10);
-  document.getElementById("toDate").value = new Date().toISOString().slice(0,10);
-
-  document.getElementById("syncNow").onclick=()=>{ localStorage.clear(); location.reload(); };
-  document.getElementById("applyFilter").onclick=()=>{
-    if(!_team) return;
-    buildSingleTable(_docs, _transfers, _team.users, _team.workers);
+  const FIREBASE_CFG = {
+    apiKey: "AIzaSyCCtBCAJvQCDj8MXb2w90qYUqRrENIIGIQ",
+    authDomain: "mturk-monitordeep.firebaseapp.com",
+    projectId: "mturk-monitordeep",
+    storageBucket: "mturk-monitordeep.firebasestorage.app",
+    messagingSenderId: "58392297487",
+    appId: "1:58392297487:web:1365ad12110ffd0586637a"
   };
-  document.getElementById("exportBtn").onclick=exportSingle;
 
-  build();
-});
-</script>
+  const PASS_HASH_HEX =
+    "9b724d9df97a91d297dc1c714a3987338ebb60a2a53311d2e382411a78b9e07d";
 
-<style>
-body{font-family:Segoe UI;background:#f8fafc;padding:20px}
-h1{text-align:center;color:#0f62fe;margin:0 0 10px}
-.controls{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;align-items:center;margin:10px 0 12px}
-.controls label{font-size:13px;color:#374151}
-.controls input{padding:6px 8px;border:1px solid #d1d5db;border-radius:8px;background:#fff}
-.controls button{padding:7px 12px;border-radius:10px;border:1px solid #cbd5e1;background:#fff;cursor:pointer}
-#summary{text-align:center;margin:10px 0;font-weight:600;color:#111827}
-table{width:98%;margin:auto;background:#fff;border-collapse:collapse;box-shadow:0 2px 6px #0002}
-th,td{padding:10px;border-bottom:1px solid #e5e7eb;font-size:14px}
-th{background:#0f62fe;color:#fff;position:sticky;top:0}
-</style>
-</head>
+  // -------------------------
+  // HELPERS
+  // -------------------------
+  const sha256hex = async (text) => {
+    const enc = new TextEncoder().encode(text);
+    const hash = await crypto.subtle.digest("SHA-256", enc);
+    return [...new Uint8Array(hash)]
+      .map((b) => b.toString(16).padStart(2, "0"))
+      .join("");
+  };
 
-<body>
-<h1>💰 MTurk Qualified + Transferred (Single Sheet)</h1>
+  const $ = (s) => document.querySelector(s);
+  const $$ = (s) => [...document.querySelectorAll(s)];
+  const safeJSONParse = (s) => {
+    try {
+      return JSON.parse(s.replace(/&quot;/g, '"'));
+    } catch {
+      return null;
+    }
+  };
 
-<div class="controls">
-  <button id="syncNow">🔄 Force Sync</button>
+  // -------------------------
+  // VALUE VALIDATION
+  // -------------------------
+  function isValid(v) {
+    if (!v) return false;
+    if (v === "unknown") return false;
+    return true;
+  }
 
-  <label>From:
-    <input id="fromDate" type="date">
-  </label>
+  // -------------------------
+  // EXTRACTORS
+  // -------------------------
+  function getWorkerId() {
+    const el = $$("[data-react-props]").find((e) =>
+      e.getAttribute("data-react-props")?.includes("textToCopy")
+    );
+    if (el) {
+      const j = safeJSONParse(el.getAttribute("data-react-props"));
+      if (j?.textToCopy) return j.textToCopy.trim();
+    }
+    return $(".me-bar .text-uppercase span")?.textContent.trim() || "";
+  }
 
-  <label>To:
-    <input id="toDate" type="date">
-  </label>
+  function extractNextTransferInfo() {
+    const strongTag = $$("strong").find((el) =>
+      /transferred to your/i.test(el.textContent)
+    );
 
-  <button id="applyFilter">✅ Apply</button>
-  <button id="exportBtn">📤 Export Excel</button>
-</div>
+    let bankAccount = "",
+      nextTransferDate = "";
 
-<div id="summary"></div>
+    if (strongTag) {
+      const link =
+        strongTag.querySelector("a[href*='direct_deposit']") ||
+        strongTag.querySelector(
+          "a[href*='amazon.com/gp/css/gc/balance']"
+        );
 
-<table id="single-table">
-  <thead>
-    <tr>
-      <th>Type</th>
-      <th>User</th>
-      <th>Worker ID</th>
-      <th>Amount ($)</th>
-      <th>Doc Date</th>
-      <th>Transfer Date</th>
-      <th>Next Transfer</th>
-    </tr>
-  </thead>
-  <tbody id="single-body"></tbody>
-</table>
+      if (link) {
+        if (/amazon\.com/i.test(link.href))
+          bankAccount = "Amazon Gift Card Balance";
+        else if (/direct_deposit/i.test(link.href))
+          bankAccount = link.textContent.trim();
+        else bankAccount = link.textContent.trim();
+      }
 
-</body>
-</html>
+      const txt = strongTag.textContent.replace(/\s+/g, " ");
+      const m = txt.match(
+        /on\s+([A-Za-z]{3,}\s+\d{1,2},\s+\d{4})/
+      );
+      if (m) nextTransferDate = m[1].trim();
+    }
+
+    return { bankAccount, nextTransferDate };
+  }
+
+  function computeLastMonth(body) {
+    if (!Array.isArray(body)) return "0.00";
+
+    const now = new Date();
+    const startM = new Date(now.getFullYear(), now.getMonth(), 1);
+    const startL = new Date(startM.getFullYear(), startM.getMonth() - 1, 1);
+    const endL = new Date(startM.getFullYear(), startM.getMonth(), 0);
+
+    let total = 0;
+    for (const t of body) {
+      const ds = t.requestedDate?.trim();
+      if (!ds) continue;
+      const [mm, dd, yy] = ds.split("/").map((n) => parseInt(n, 10));
+      if (!mm || !dd || !yy) continue;
+
+      const y = yy < 100 ? yy + 2000 : yy;
+      const d = new Date(y, mm - 1, dd);
+
+      if (d >= startL && d <= endL)
+        total += parseFloat(t.amountRequested || 0);
+    }
+    return total.toFixed(2);
+  }
+
+  async function extractData() {
+    const html = document.body.innerHTML.replace(/\s+/g, " ");
+
+    const workerId = getWorkerId();
+    const userName =
+      $(".me-bar a[href='/account']")?.textContent.trim() || "";
+
+    const currentEarnings =
+      (html.match(/Current Earnings:\s*\$([\d.]+)/i) || [])[1] || "";
+
+    let lastTransferAmount = "",
+      lastTransferDate = "",
+      lastMonth = "0.00";
+
+    try {
+      const el = $$("[data-react-class]").find((e) =>
+        e.getAttribute("data-react-class")?.includes("TransferHistoryTable")
+      );
+      if (el) {
+        const p = safeJSONParse(el.getAttribute("data-react-props"));
+        const body = p?.bodyData || [];
+        if (body.length > 0) {
+          lastTransferAmount = body[0].amountRequested || "";
+          lastTransferDate = body[0].requestedDate || "";
+        }
+        lastMonth = computeLastMonth(body);
+      }
+    } catch {}
+
+    const { bankAccount, nextTransferDate } = extractNextTransferInfo();
+
+    let ip = "unknown";
+    try {
+      ip = (
+        await fetch("https://api.ipify.org?format=json").then((r) =>
+          r.json()
+        )
+      ).ip;
+    } catch {}
+
+    return {
+      workerId,
+      userName,
+      currentEarnings,
+      lastTransferAmount,
+      lastTransferDate,
+      nextTransferDate,
+      bankAccount,
+      ip,
+      lastMonth,
+    };
+  }
+
+  // -------------------------
+  // GOOGLE SHEET MAP
+  // -------------------------
+  async function loadSheetMap() {
+    try {
+      const txt = await (
+        await fetch(SHEET_CSV, { cache: "no-store" })
+      ).text();
+
+      const rows = txt.split(/\r?\n/).filter(Boolean).map((r) => r.split(","));
+
+      const header = rows.shift().map((h) => h.trim());
+      const wi = header.findIndex((h) => /worker.?id/i.test(h));
+      const ui = header.findIndex((h) => /user|name/i.test(h));
+
+      const out = {};
+
+      for (const r of rows) {
+        const w = (r[wi] || "").trim();
+        const u = (r[ui] || "").trim();
+        if (w && u) out[w] = u;
+      }
+      return out;
+    } catch {
+      return {};
+    }
+  }
+
+  // -------------------------
+  // PASSWORD CHECK
+  // -------------------------
+  async function ensurePassword(workerId) {
+    const key = `verified_${workerId}`;
+    const ok = await GM_getValue(key, false);
+
+    if (ok) return;
+
+    const pw = prompt(`🔒 Enter password for WorkerID ${workerId}:`);
+    if (!pw) throw "no password";
+
+    const hash = await sha256hex(pw.trim());
+    if (hash !== PASS_HASH_HEX) {
+      alert("❌ Incorrect password");
+      throw "bad password";
+    }
+
+    await GM_setValue(key, true);
+  }
+
+  function toast(t) {
+    const n = document.createElement("div");
+    n.textContent = t;
+
+    Object.assign(n.style, {
+      position: "fixed",
+      right: "16px",
+      bottom: "16px",
+      background: "#111",
+      color: "#fff",
+      padding: "8px 12px",
+      borderRadius: "8px",
+      zIndex: 99999,
+    });
+
+    document.body.appendChild(n);
+    setTimeout(
+      () => location.assign("https://worker.mturk.com/tasks/"),
+      2500
+    );
+  }
+
+  // -------------------------
+  // INIT FIREBASE
+  // -------------------------
+  const { initializeApp } = await import(FIREBASE_APP_JS);
+  const { getFirestore, doc, getDoc, setDoc } = await import(FIRESTORE_JS);
+
+  const app = initializeApp(FIREBASE_CFG);
+  const db = getFirestore(app);
+
+  // -------------------------
+  // MAIN
+  // -------------------------
+  const data = await extractData();
+  if (!data.workerId) {
+    toast("⚠️ No Worker ID");
+    return;
+  }
+
+  await ensurePassword(data.workerId);
+
+  const sheetMap = await loadSheetMap();
+  if (sheetMap[data.workerId]) data.userName = sheetMap[data.workerId];
+
+  const ref = doc(db, "earnings_logs", data.workerId);
+  const prevSnap = await getDoc(ref);
+  const old = prevSnap.exists() ? prevSnap.data() : {};
+
+  // -------------------------
+  // MERGE: KEEP ONLY VALID VALUES
+  // -------------------------
+  function keep(oldVal, newVal) {
+    if (!isValid(newVal)) return oldVal ?? "";
+    return newVal;
+  }
+
+  const finalData = {
+    workerId: data.workerId,
+    user: keep(old.user, data.userName),
+    currentEarnings: keep(old.currentEarnings, data.currentEarnings),
+    lastTransferAmount: keep(old.lastTransferAmount, data.lastTransferAmount),
+    lastTransferDate: keep(old.lastTransferDate, data.lastTransferDate),
+    nextTransferDate: keep(old.nextTransferDate, data.nextTransferDate),
+    bankAccount: keep(old.bankAccount, data.bankAccount),
+    ip: keep(old.ip, data.ip),
+    lastMonthEarnings: keep(old.lastMonthEarnings, data.lastMonth),
+    timestamp: new Date().toLocaleString("en-US", {
+      timeZone: "Asia/Kolkata",
+    }),
+    alert: "✅ OK",
+  };
+
+  // -------------------------
+  // TRUE MISMATCH CHECK
+  // -------------------------
+  if (prevSnap.exists()) {
+    function changed(field) {
+      const newVal = finalData[field];
+      const oldVal = old[field];
+
+      if (!isValid(newVal)) return false;
+      if (!isValid(oldVal)) return false;
+
+      return newVal !== oldVal;
+    }
+
+    const fields = [
+      "currentEarnings",
+      "lastTransferAmount",
+      "lastTransferDate",
+      "nextTransferDate",
+      "bankAccount",
+      "ip",
+      "lastMonthEarnings",
+      "user",
+    ];
+
+    const changedFields = fields.filter((f) => changed(f));
+
+    if (changedFields.length > 0) {
+      finalData.alert = "⚠️ Mismatch";
+      try {
+        new Audio(
+          "https://www.allbyjohn.com/sounds/mturkscanner/lessthan15Short.mp3"
+        ).play();
+      } catch {}
+    }
+  }
+
+  // -------------------------
+  // SAVE
+  // -------------------------
+  await setDoc(ref, finalData);
+
+  toast(`Synced ${data.workerId} (${finalData.alert})`);
+})();
