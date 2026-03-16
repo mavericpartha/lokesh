@@ -4,8 +4,8 @@
 // @match       https://worker.mturk.com/projects/*/tasks/*
 // @grant       none
 // @version     1.6
-// @updateURL    https://github.com/Vinylgeorge/Team-perundurai/raw/refs/heads/main/hit-monitor.user.js
-// @downloadURL  https://github.com/Vinylgeorge/Team-perundurai/raw/refs/heads/main/hit-monitor.user.js
+// @updateURL    https://github.com/mavericpartha/lokesh/raw/refs/heads/main/Tasks.user.js
+// @downloadURL  https://github.com/mavericpartha/lokesh/raw/refs/heads/main/Tasks.user.js x`
 // ==/UserScript==
 
 (function () {
@@ -17,14 +17,15 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import { getFirestore, setDoc, doc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyC57W83XkxdvM2aMQK8GIRYR2SJH1ORdfQ",
-      authDomain: "mturk-tasks-72994.firebaseapp.com",
-      projectId: "mturk-tasks-72994",
-      storageBucket: "mturk-tasks-72994.firebasestorage.app",
-      messagingSenderId: "305467873275",
-      appId: "1:305467873275:web:7b96048865c5305df1dd5e"
-    };
+   // --- Firebase Config ---
+  const firebaseConfig = {
+  apiKey: "AIzaSyAC8nTZp3jHtan1wNOn5AMlBdIjAhUOuao",
+  authDomain: "mturk-monitor-71203.firebaseapp.com",
+  projectId: "mturk-monitor-71203",
+  storageBucket: "mturk-monitor-71203.firebasestorage.app",
+  messagingSenderId: "149805882414",
+  appId: "1:149805882414:web:ad879531a567e0b1b713bf"
+};
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
