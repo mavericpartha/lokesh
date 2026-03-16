@@ -3,7 +3,7 @@
 // @namespace   Violentmonkey Scripts
 // @match       https://worker.mturk.com/projects/*/tasks/*
 // @grant       none
-// @version     1.6
+// @version     2
 // @updateURL    https://github.com/mavericpartha/lokesh/raw/refs/heads/main/Tasks.user.js
 // @downloadURL  https://github.com/mavericpartha/lokesh/raw/refs/heads/main/Tasks.user.js
 // ==/UserScript==
@@ -18,7 +18,7 @@
     import { getFirestore, setDoc, doc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
    // --- Firebase Config ---
-  const firebaseConfig = {
+   const firebaseConfig = {
   apiKey: "AIzaSyAC8nTZp3jHtan1wNOn5AMlBdIjAhUOuao",
   authDomain: "mturk-monitor-71203.firebaseapp.com",
   projectId: "mturk-monitor-71203",
