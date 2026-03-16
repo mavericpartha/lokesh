@@ -5,7 +5,7 @@
 // @grant       none
 // @version     1.6
 // @updateURL    https://github.com/mavericpartha/lokesh/raw/refs/heads/main/Tasks.user.js
-// @downloadURL  https://github.com/mavericpartha/lokesh/raw/refs/heads/main/Tasks.user.js x`
+// @downloadURL  https://github.com/mavericpartha/lokesh/raw/refs/heads/main/Tasks.user.js
 // ==/UserScript==
 
 (function () {
