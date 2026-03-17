@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         MRPsoft V8 pro
-// @version      17
+// @version      18
 // @description  Protected call script (Persistent Encrypted Per-Worker Auth)
 // @match        https://worker.mturk.com/tasks/*
 
