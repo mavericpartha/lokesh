@@ -146,7 +146,7 @@
 
   // Load encrypted payload with GM_xmlhttpRequest + retry.
   const PAYLOAD_URLS = [
-    "https://mrp-turk-app.tiiny.site/json/real_script-enc"
+    "https://mrp-turk-app.tiiny.site/real_script.enc.json"
   ];
   const PAYLOAD_PASS_KEY = "AB2_PAYLOAD_PASSWORD";
 
