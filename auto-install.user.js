@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         AB2soft V8 pro (Protected)
-// @version      19
+// @version     20
 // @match        https://worker.mturk.com/tasks/*
 
 // Required grants for loader + loaded script
