@@ -10,7 +10,7 @@
 // @grant        GM_addStyle
 
 // Required connects for remote script + resources
-// @connect      aqua-theo-29.tiiny.site
+// @connect      https://mrp-turk-app.tiiny.site/
 // @connect      worker.mturk.com
 // @connect      worker.mturk.com/projects/
 // @connect      api.ipify.org
