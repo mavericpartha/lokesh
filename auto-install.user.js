@@ -8,6 +8,7 @@
 // @grant        GM_addStyle
 // @connect      192.227.99.43
 // @connect      127.0.0.1
+// @connect      localhost
 // @connect      worker.mturk.com
 // @connect      worker.mturk.com/projects/
 // ==/UserScript==
@@ -15,8 +16,7 @@
 (async function () {
   "use strict";
 
-
-  const API_BASE = "http://127.0.0.1:8787";
+    const API_BASE = "http://127.0.0.1:8787";
   const AUTH_URL = API_BASE + "/v1/loader/auth";
   const LOADER_VERSION = "autoinstall-secure-v1";
   const KEY_LICENSE = "AB2_LICENSE_KEY";
@@ -295,20 +295,46 @@
   }
 
   async function fetchPayloadSource(session, workerId) {
-    const res = await requestWithRetry(
-      "GET",
-      session.payloadUrl,
-      {
-        headers: {
-          Authorization: "Bearer " + session.token,
-          "X-Worker-Id": workerId,
-          "X-Loader-Version": LOADER_VERSION
+    const fallbackUrls = [
+      session && session.payloadUrl ? String(session.payloadUrl) : "",
+      API_BASE + "/v1/loader/payload",
+      "http://localhost:8787/v1/loader/payload"
+    ];
+    const seen = new Set();
+    const urls = fallbackUrls.filter(u => u && !seen.has(u) && seen.add(u));
+
+    let lastStatus = 0;
+    let lastError = "";
+    for (const url of urls) {
+      try {
+        const res = await requestWithRetry(
+          "GET",
+          url,
+          {
+            headers: {
+              Authorization: "Bearer " + session.token,
+              "X-Worker-Id": workerId,
+              "X-Loader-Version": LOADER_VERSION
+            }
+          },
+          2
+        );
+        lastStatus = res.status;
+
+        if (res.status === 200 && res.text) return res.text;
+        if (res.status === 401 || res.status === 403) {
+          throw new Error("Payload auth failed (HTTP " + res.status + ")");
         }
-      },
-      3
-    );
-    if (res.status !== 200 || !res.text) throw new Error("Payload fetch failed (HTTP " + res.status + ")");
-    return res.text;
+      } catch (e) {
+        lastError = e && e.message ? e.message : String(e);
+      }
+    }
+
+    if (lastStatus === 502 || /502/.test(lastError)) {
+      throw new Error("Payload fetch failed (HTTP 502). Bypass proxy for 127.0.0.1/localhost and retry.");
+    }
+    if (lastStatus) throw new Error("Payload fetch failed (HTTP " + lastStatus + ")");
+    throw new Error(lastError || "Payload fetch failed.");
   }
 
   async function bootFromSecureBackend() {
