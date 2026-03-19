@@ -1,292 +1,342 @@
 // ==UserScript==
-// @name         AB2soft V8 pro (Protected)
-// @version     20
+// @name         AB2soft Secure Loader
+// @version   30
 // @match        https://worker.mturk.com/tasks/*
-
-// Required grants for loader + loaded script
 // @grant        GM_xmlhttpRequest
 // @grant        GM.getValue
 // @grant        GM.setValue
 // @grant        GM_addStyle
-
-// Required connects for remote script + resources
-// @connect      https://mrp-turk-app.tiiny.site/
+// @connect      192.227.99.43
 // @connect      worker.mturk.com
 // @connect      worker.mturk.com/projects/
-// @connect      api.ipify.org
-// @connect      www.allbyjohn.com
-// @connect      raw.githubusercontent.com
-// @connect      github.com
-// @connect      api.github.com
 // ==/UserScript==
 
 (async function () {
-  'use strict';
+  "use strict";
 
-  async function P() {
+  const API_BASE = "http://192.227.99.43:8787";
+  const AUTH_URL = API_BASE + "/v1/loader/auth";
+  const LOADER_VERSION = "autoinstall-secure-v1";
+  const KEY_LICENSE = "AB2_LICENSE_KEY";
+  const KEY_DEVICE_ID = "AB2_DEVICE_ID";
+  const KEY_LAST_WORKER = "AB2_LAST_WORKER_ID";
+
+  function normalizeWorkerId(input) {
+    if (!input) return "";
+    const txt = String(input).replace(/^Copied\s+/i, "").trim();
+    const m = txt.match(/A[A-Z0-9]{12,}/);
+    if (m && m[0]) return m[0];
+    if (/^[A-Z0-9]{10,}$/.test(txt)) return txt;
+    return "";
+  }
+
+  function extractWorkerFromDom() {
+    const directSelectors = [
+      ".me-bar .text-uppercase span",
+      ".me-bar span.text-uppercase span",
+      "[data-testid='worker-id']",
+      "[data-worker-id]"
+    ];
+    for (const sel of directSelectors) {
+      const el = document.querySelector(sel);
+      const id = normalizeWorkerId(el && (el.textContent || el.getAttribute("data-worker-id")));
+      if (id) return id;
+    }
+
+    const reactNodes = document.querySelectorAll("[data-react-props]");
+    for (const node of reactNodes) {
+      const raw = node.getAttribute("data-react-props");
+      if (!raw) continue;
+      const parsed = parseJsonSafe(raw.replace(/&quot;/g, '"'));
+      if (!parsed || typeof parsed !== "object") continue;
+      const id =
+        normalizeWorkerId(parsed.workerId) ||
+        normalizeWorkerId(parsed.worker_id) ||
+        normalizeWorkerId(parsed.textToCopy);
+      if (id) return id;
+    }
+    return "";
+  }
+
+  function extractWorkerFromUrl() {
     try {
-      const M = document.documentElement.innerHTML;
-      const H = [
+      const u = new URL(location.href);
+      const keys = ["workerId", "worker_id", "workerID", "wid"];
+      for (const key of keys) {
+        const id = normalizeWorkerId(u.searchParams.get(key) || "");
+        if (id) return id;
+      }
+    } catch (_e) {}
+    return "";
+  }
+
+  function extractWorkerFromHtml() {
+    try {
+      const html = document.documentElement.innerHTML;
+      const patterns = [
         /"workerId"\s*:\s*"([^"]+)"/i,
         /"worker_id"\s*:\s*"([^"]+)"/i,
         /workerId=([A-Za-z0-9]+)/i,
         /worker_id=([A-Za-z0-9]+)/i
       ];
-      for (const U of H) {
-        const d = M.match(U);
-        if (d && d[1]) return d[1];
+      for (const re of patterns) {
+        const m = html.match(re);
+        const id = normalizeWorkerId(m && m[1]);
+        if (id) return id;
       }
-    } catch (o) {}
-    return 'UNKNOWN_WORKER';
+    } catch (_e) {}
+    return "";
   }
 
-  const J = 'AB2soft::V6Pro::PermanentKey';
-
-  async function V(M, H) {
-    const U = new TextEncoder();
-    const d = crypto.getRandomValues(new Uint8Array(16));
-    const o = crypto.getRandomValues(new Uint8Array(12));
-    const Z = await crypto.subtle.importKey(
-      'raw',
-      U.encode(J + '::' + H),
-      'PBKDF2',
-      false,
-      ['deriveKey']
-    );
-    const E = await crypto.subtle.deriveKey(
-      { name: 'PBKDF2', salt: d, iterations: 120000, hash: 'SHA-256' },
-      Z,
-      { name: 'AES-GCM', length: 256 },
-      false,
-      ['encrypt']
-    );
-    const Q = await crypto.subtle.encrypt(
-      { name: 'AES-GCM', iv: o },
-      E,
-      U.encode(M)
-    );
-    const W = i => btoa(String.fromCharCode(...i));
-    return { s: W(d), i: W(o), c: W(new Uint8Array(Q)) };
-  }
-
-  async function L(M, H) {
-    const U = new TextDecoder();
-    const d = new TextEncoder();
-    const o = W => Uint8Array.from(atob(W), i => i.charCodeAt(0));
-    const Z = await crypto.subtle.importKey(
-      'raw',
-      d.encode(J + '::' + H),
-      'PBKDF2',
-      false,
-      ['deriveKey']
-    );
-    const E = await crypto.subtle.deriveKey(
-      { name: 'PBKDF2', salt: o(M.s), iterations: 120000, hash: 'SHA-256' },
-      Z,
-      { name: 'AES-GCM', length: 256 },
-      false,
-      ['decrypt']
-    );
-    const Q = await crypto.subtle.decrypt(
-      { name: 'AES-GCM', iv: o(M.i) },
-      E,
-      o(M.c)
-    );
-    return U.decode(Q);
-  }
-
-  function j(M, H) {
-    let U = '';
-    for (let d = 0; d < M.length; d++) {
-      U += String.fromCharCode(M.charCodeAt(d) ^ H.charCodeAt(d % H.length));
-    }
-    return U;
-  }
-
-  function G(M) {
-    return M.replace(/[A-Za-z0-9]/g, H => {
-      if (H >= '0' && H <= '9') return String.fromCharCode((H.charCodeAt(0) - 48 + 7) % 10 + 48);
-      if (H >= 'A' && H <= 'Z') return String.fromCharCode((H.charCodeAt(0) - 65 + 23) % 26 + 65);
-      return String.fromCharCode((H.charCodeAt(0) - 97 + 23) % 26 + 97);
-    });
-  }
-
-  async function B() {
-    const M = await P();
-    const H = 'AB2_AUTH::' + M;
-    const U = await GM.getValue(H, null);
-
-    if (U) {
-      try {
-        const i = await L(U, M);
-        if (i === 'OK') return true;
-      } catch (q) {}
-    }
-
-    const d = prompt('Enter AB2soft access code:');
-    if (!d) return false;
-
-    const o = 'mK7pX2';
-    const Z = ',\t\x05 \n}_{_\x05D';
-    const E = j(Z, o);
-    const Q = G('DE5SUR5357');
-
-    if (d !== E && d !== Q) {
-      alert('Access denied!');
-      return false;
-    }
-
-    const W = await V('OK', M);
-    await GM.setValue(H, W);
-    return true;
-  }
-
-  const f = await B();
-  if (!f) return;
-
-  // Load encrypted payload with GM_xmlhttpRequest + retry.
-  const PAYLOAD_URLS = [
-    "https://mrp-turk-app.tiiny.site/real_script.enc.json"
-  ];
-  const PAYLOAD_PASS_KEY = "AB2_PAYLOAD_PASSWORD";
-
-  function requestTextWithRetry(url, maxAttempts = 5) {
-    let attempt = 0;
-    return new Promise(function (resolve, reject) {
-      function run() {
-        attempt += 1;
-        GM_xmlhttpRequest({
-          method: "GET",
-          url,
-          nocache: true,
-          timeout: 20000,
-          onload: function (r) {
-            const shouldRetry = r.status === 429 || r.status === 503;
-            if (shouldRetry && attempt < maxAttempts) {
-              const waitMs = Math.min(1500 * Math.pow(2, attempt - 1), 12000) + Math.floor(Math.random() * 400);
-              setTimeout(run, waitMs);
-              return;
-            }
-            if (r.status === 200 && r.responseText) {
-              resolve(r.responseText);
-              return;
-            }
-            reject(new Error("HTTP " + r.status + " at " + url + " (attempt " + attempt + ")"));
-          },
-          onerror: function () {
-            if (attempt < maxAttempts) {
-              const waitMs = Math.min(1500 * Math.pow(2, attempt - 1), 12000) + Math.floor(Math.random() * 400);
-              setTimeout(run, waitMs);
-              return;
-            }
-            reject(new Error("Network/load error at " + url));
-          },
-          ontimeout: function () {
-            if (attempt < maxAttempts) {
-              const waitMs = Math.min(1500 * Math.pow(2, attempt - 1), 12000) + Math.floor(Math.random() * 400);
-              setTimeout(run, waitMs);
-              return;
-            }
-            reject(new Error("Timed out at " + url));
-          }
-        });
-      }
-      run();
-    });
-  }
-
-  function b64ToBytes(b64) {
-    const raw = atob(b64);
-    const out = new Uint8Array(raw.length);
-    for (let i = 0; i < raw.length; i++) out[i] = raw.charCodeAt(i);
-    return out;
-  }
-
-  function joinBytes(a, b) {
-    const out = new Uint8Array(a.length + b.length);
-    out.set(a, 0);
-    out.set(b, a.length);
-    return out;
-  }
-
-  async function decryptEncPayload(payload, password) {
-    if (!payload || payload.alg !== "AES-256-GCM" || payload.kdf !== "PBKDF2-SHA256") {
-      throw new Error("Invalid payload format.");
-    }
-    const iter = Number(payload.iter || 120000);
-    const salt = b64ToBytes(payload.salt);
-    const iv = b64ToBytes(payload.iv);
-    const tag = b64ToBytes(payload.tag);
-    const data = b64ToBytes(payload.data);
-    const cipherWithTag = joinBytes(data, tag);
-
-    const baseKey = await crypto.subtle.importKey(
-      "raw",
-      new TextEncoder().encode(password),
-      "PBKDF2",
-      false,
-      ["deriveKey"]
-    );
-    const aesKey = await crypto.subtle.deriveKey(
-      { name: "PBKDF2", salt, iterations: iter, hash: "SHA-256" },
-      baseKey,
-      { name: "AES-GCM", length: 256 },
-      false,
-      ["decrypt"]
-    );
-    const plainBuf = await crypto.subtle.decrypt(
-      { name: "AES-GCM", iv },
-      aesKey,
-      cipherWithTag
-    );
-    return new TextDecoder().decode(plainBuf);
-  }
-
-  async function getPayloadPassword() {
-    const cached = await GM.getValue(PAYLOAD_PASS_KEY, "");
-    if (cached) return cached;
-    const input = prompt("Enter encrypted script password:");
-    if (!input) throw new Error("No decryption password entered.");
-    await GM.setValue(PAYLOAD_PASS_KEY, input);
-    return input;
-  }
-
-  async function fetchEncryptedPayload() {
-    const errors = [];
-    for (const url of PAYLOAD_URLS) {
-      try {
-        const body = await requestTextWithRetry(url);
-        const trimmed = body.trim();
-        if (!trimmed || trimmed[0] === "<") {
-          throw new Error("URL returned HTML, not JSON: " + url);
-        }
-        return JSON.parse(trimmed);
-      } catch (e) {
-        errors.push(e && e.message ? e.message : String(e));
-      }
-    }
-    throw new Error(errors.join(" | "));
-  }
-
-  async function bootEncryptedScript() {
+  function extractWorkerFromStorage() {
     try {
-      const payload = await fetchEncryptedPayload();
-      let password = await getPayloadPassword();
-      let sourceCode;
-      try {
-        sourceCode = await decryptEncPayload(payload, password);
-      } catch (e) {
-        await GM.setValue(PAYLOAD_PASS_KEY, "");
-        password = prompt("Wrong password. Re-enter encrypted script password:");
-        if (!password) throw new Error("No decryption password entered.");
-        await GM.setValue(PAYLOAD_PASS_KEY, password);
-        sourceCode = await decryptEncPayload(payload, password);
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (!key) continue;
+        const value = localStorage.getItem(key) || "";
+        const id = normalizeWorkerId(value);
+        if (id) return id;
+        const m = value.match(/A[A-Z0-9]{12,}/);
+        if (m && m[0]) return m[0];
       }
-      eval(sourceCode); // direct eval keeps GM_* available
-    } catch (e) {
-      alert("AB2soft load error: " + (e && e.message ? e.message : e));
+    } catch (_e) {}
+    return "";
+  }
+
+  function detectWorkerIdNow() {
+    return (
+      extractWorkerFromDom() ||
+      extractWorkerFromUrl() ||
+      extractWorkerFromHtml() ||
+      extractWorkerFromStorage()
+    );
+  }
+
+  async function getWorkerId() {
+    const maxWaitMs = 12000;
+    const intervalMs = 400;
+    const start = Date.now();
+
+    while (Date.now() - start < maxWaitMs) {
+      const current = detectWorkerIdNow();
+      if (current) {
+        await GM.setValue(KEY_LAST_WORKER, current);
+        return current;
+      }
+      await sleep(intervalMs);
+    }
+
+    const lastKnown = normalizeWorkerId(await GM.getValue(KEY_LAST_WORKER, ""));
+    if (lastKnown) return lastKnown;
+    return "UNKNOWN_WORKER";
+  }
+
+  function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
+  function b64UrlFromBytes(bytes) {
+    let raw = "";
+    for (let i = 0; i < bytes.length; i++) raw += String.fromCharCode(bytes[i]);
+    return btoa(raw).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
+  }
+
+  function randomNonce(size) {
+    return b64UrlFromBytes(crypto.getRandomValues(new Uint8Array(size || 16)));
+  }
+
+  function randomUuidV4() {
+    const b = crypto.getRandomValues(new Uint8Array(16));
+    b[6] = (b[6] & 0x0f) | 0x40;
+    b[8] = (b[8] & 0x3f) | 0x80;
+    const hex = Array.from(b, x => x.toString(16).padStart(2, "0")).join("");
+    return (
+      hex.slice(0, 8) + "-" +
+      hex.slice(8, 12) + "-" +
+      hex.slice(12, 16) + "-" +
+      hex.slice(16, 20) + "-" +
+      hex.slice(20)
+    );
+  }
+
+  async function getOrCreateDeviceId() {
+    let id = await GM.getValue(KEY_DEVICE_ID, "");
+    if (!id) {
+      id = randomUuidV4();
+      await GM.setValue(KEY_DEVICE_ID, id);
+    }
+    return id;
+  }
+
+  async function sha256Hex(text) {
+    const data = new TextEncoder().encode(text);
+    const digest = await crypto.subtle.digest("SHA-256", data);
+    return Array.from(new Uint8Array(digest), b => b.toString(16).padStart(2, "0")).join("");
+  }
+
+  function gmRequest(method, url, opts) {
+    const headers = (opts && opts.headers) || {};
+    const data = (opts && opts.data) || null;
+    const timeout = (opts && opts.timeout) || 20000;
+    return new Promise((resolve, reject) => {
+      GM_xmlhttpRequest({
+        method,
+        url,
+        headers,
+        data,
+        nocache: true,
+        timeout,
+        onload: r => resolve({ status: r.status, text: r.responseText || "" }),
+        onerror: () => reject(new Error("Network error at " + url)),
+        ontimeout: () => reject(new Error("Timed out at " + url))
+      });
+    });
+  }
+
+  async function requestWithRetry(method, url, opts, maxAttempts) {
+    let attempt = 0;
+    const max = maxAttempts || 5;
+    while (attempt < max) {
+      attempt += 1;
+      try {
+        const res = await gmRequest(method, url, opts || {});
+        const retryStatus = res.status === 429 || res.status === 503;
+        if (retryStatus && attempt < max) {
+          const waitMs = Math.min(1500 * Math.pow(2, attempt - 1), 12000) + Math.floor(Math.random() * 400);
+          await sleep(waitMs);
+          continue;
+        }
+        return res;
+      } catch (e) {
+        if (attempt >= max) throw e;
+        const waitMs = Math.min(1500 * Math.pow(2, attempt - 1), 12000) + Math.floor(Math.random() * 400);
+        await sleep(waitMs);
+      }
+    }
+    throw new Error("Request failed after retries: " + url);
+  }
+
+  function parseJsonSafe(text) {
+    try {
+      return JSON.parse(text || "{}");
+    } catch (_e) {
+      return {};
     }
   }
 
-  bootEncryptedScript();
+  function pickErrorMessage(body, fallback) {
+    if (body && typeof body.error === "string" && body.error) return body.error;
+    if (body && typeof body.detail === "string" && body.detail) return body.detail;
+    if (body && typeof body.reason === "string" && body.reason) return body.reason;
+    return fallback;
+  }
+
+  async function promptLicense(existing) {
+    const current = existing || "";
+    const next = prompt("Enter your license key:", current);
+    if (!next || !next.trim()) throw new Error("License key is required.");
+    return next.trim();
+  }
+
+  async function authSession(workerId) {
+    const deviceId = await getOrCreateDeviceId();
+    let licenseKey = (await GM.getValue(KEY_LICENSE, "") || "").trim();
+    if (!licenseKey) {
+      licenseKey = await promptLicense("");
+      await GM.setValue(KEY_LICENSE, licenseKey);
+    }
+
+    for (let licenseAttempt = 0; licenseAttempt < 2; licenseAttempt++) {
+      let unlockCode = "";
+      for (let unlockAttempt = 0; unlockAttempt < 3; unlockAttempt++) {
+        const body = {
+          workerId,
+          deviceId,
+          loaderVersion: LOADER_VERSION,
+          nonce: randomNonce(16),
+          issuedAt: Date.now(),
+          licenseKey
+        };
+        if (unlockCode) body.unlockCode = unlockCode;
+
+        const res = await requestWithRetry(
+          "POST",
+          AUTH_URL,
+          {
+            headers: { "Content-Type": "application/json" },
+            data: JSON.stringify(body)
+          },
+          3
+        );
+        const json = parseJsonSafe(res.text);
+
+        if (res.status === 200 && json && json.ok && json.session) return json.session;
+
+        if (res.status === 423 && json && json.error_code === "NEED_ROTATING_PASSWORD") {
+          const code = prompt("This worker is locked to another worker/device/IP. Enter temporary rotating password:");
+          if (!code || !code.trim()) throw new Error("Rotating unlock code is required.");
+          unlockCode = code.trim();
+          continue;
+        }
+
+        const errMsg = pickErrorMessage(json, "Authorization failed.");
+        const maybeLicenseIssue = res.status === 403 && /license/i.test(errMsg);
+        if (maybeLicenseIssue && licenseAttempt === 0) {
+          licenseKey = await promptLicense("");
+          await GM.setValue(KEY_LICENSE, licenseKey);
+          break;
+        }
+        throw new Error(errMsg + " (HTTP " + res.status + ")");
+      }
+    }
+    throw new Error("Authorization failed.");
+  }
+
+  async function fetchPayloadSource(session, workerId) {
+    const res = await requestWithRetry(
+      "GET",
+      session.payloadUrl,
+      {
+        headers: {
+          Authorization: "Bearer " + session.token,
+          "X-Worker-Id": workerId,
+          "X-Loader-Version": LOADER_VERSION
+        }
+      },
+      3
+    );
+    if (res.status !== 200 || !res.text) throw new Error("Payload fetch failed (HTTP " + res.status + ")");
+    return res.text;
+  }
+
+  async function bootFromSecureBackend() {
+    let workerId = await getWorkerId();
+    if (!workerId || workerId === "UNKNOWN_WORKER") {
+      const manual = prompt("Could not auto-detect workerId. Enter Worker ID (starts with A):");
+      const normalized = normalizeWorkerId(manual);
+      if (!normalized) {
+        throw new Error("Could not detect workerId. Stay on MTurk tasks page for a few seconds and retry.");
+      }
+      workerId = normalized;
+      await GM.setValue(KEY_LAST_WORKER, workerId);
+    }
+
+    const session = await authSession(workerId);
+    const sourceCode = await fetchPayloadSource(session, workerId);
+
+    if (session.payloadSha256) {
+      const got = (await sha256Hex(sourceCode)).toLowerCase();
+      const expected = String(session.payloadSha256).toLowerCase();
+      if (got !== expected) throw new Error("Payload hash mismatch.");
+    }
+
+    // direct eval keeps GM_* available for loaded script
+    eval(sourceCode);
+  }
+
+  try {
+    await bootFromSecureBackend();
+  } catch (e) {
+    alert("AB2soft secure loader error: " + (e && e.message ? e.message : e));
+  }
 })();
