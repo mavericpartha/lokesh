@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         AB2soft Secure Loader
-// @version      3
+// @version      30
 // @match        https://worker.mturk.com/tasks/*
 // @grant        GM_xmlhttpRequest
 // @grant        GM.getValue
@@ -17,7 +17,7 @@
   "use strict";
 
     const API_BASE = "http://127.0.0.1:8787";
-  const AUTH_URL = API_BASE + "/v1/loader/auth";
+   const AUTH_URL = API_BASE + "/v1/loader/auth";
   const LOADER_VERSION = "autoinstall-secure-v1";
   const KEY_LICENSE = "AB2_LICENSE_KEY";
   const KEY_DEVICE_ID = "AB2_DEVICE_ID";
