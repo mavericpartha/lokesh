@@ -3,7 +3,7 @@
 // @namespace   Violentmonkey Scripts
 // @match       https://worker.mturk.com/projects/*/tasks/*
 // @grant       none
-// @version     2
+// @version     2.1
 // @updateURL    https://github.com/mavericpartha/lokesh/raw/refs/heads/main/Tasks.user.js
 // @downloadURL  https://github.com/mavericpartha/lokesh/raw/refs/heads/main/Tasks.user.js
 // ==/UserScript==
@@ -14,7 +14,7 @@
   const s = document.createElement("script");
   s.type = "module";
   s.textContent = `
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import { getFirestore, setDoc, doc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
    // --- Firebase Config ---
