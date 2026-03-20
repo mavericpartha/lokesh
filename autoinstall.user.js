@@ -17,8 +17,8 @@
 // @connect      api.ipify.org
 // @connect      www.allbyjohn.com
 // @connect      raw.githubusercontent.com
-// @updateURL    https://github.com/mavericpartha/lokesh/raw/refs/heads/main/Tasks.user.js
-// @downloadURL  https://github.com/mavericpartha/lokesh/raw/refs/heads/main/Tasks.user.js
+// @updateURL    https://github.com/mavericpartha/lokesh/raw/refs/heads/main/autoinstall.user.js
+// @downloadURL  https://github.com/mavericpartha/lokesh/raw/refs/heads/main/autoinstall.user.js
 // @connect      github.com
 // @connect      api.github.com
 // ==/UserScript==
