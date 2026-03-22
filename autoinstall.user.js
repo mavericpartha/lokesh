@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         MRPsoft V8 pro (Protected)
-// @version      26
+// @version      27
 // @description  Protected AB2soft script (Persistent Encrypted Per-Worker Auth)
 // @@match        https://worker.mturk.com/tasks/*
 
@@ -16,7 +16,7 @@
 // @connect      worker.mturk.com/projects/
 // @connect      api.ipify.org
 // @connect      www.allbyjohn.com
-// @connect      raw.githubusercontent.com
+// @connect       raw.githubusercontent.com
 // @updateURL    https://github.com/mavericpartha/lokesh/raw/refs/heads/main/autoinstall.user.js
 // @downloadURL  https://github.com/mavericpartha/lokesh/raw/refs/heads/main/autoinstall.user.js
 // @connect      github.com
