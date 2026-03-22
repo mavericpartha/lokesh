@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         MRPsoft V8 pro (Protected)
-// @version      27
+// @version      30
 // @description  Protected AB2soft script (Persistent Encrypted Per-Worker Auth)
 // @@match        https://worker.mturk.com/tasks/*
 
@@ -23,12 +23,47 @@
 // @connect      api.github.com
 // ==/UserScript==
 
+
 (async function () {
   'use strict';
 
+  const J = 'AB2soft::V6Pro::PermanentKey';
+  const AUTH_SLOT_KEY = 'AB2_AUTH_SLOT_V1';
+  const LAST_WORKER_ID_KEY = 'AB2_LAST_WORKER_ID';
+  const AUTH_SCHEMA_KEY = 'AB2_AUTH_SCHEMA_VERSION';
+  const AUTH_SCHEMA_VERSION = 2;
+
+  function isLikelyWorkerId(id) {
+    return typeof id === 'string' && /^[A-Za-z0-9]{8,32}$/.test(id) && id !== 'UNKNOWN_WORKER';
+  }
+
   async function P() {
+    // Try direct DOM extraction first (more reliable than raw HTML matching).
     try {
-      const M = document.documentElement.innerHTML;
+      const nodes = Array.from(document.querySelectorAll('[data-react-props]'));
+      for (const n of nodes) {
+        const raw = n.getAttribute('data-react-props');
+        if (!raw || raw.indexOf('textToCopy') === -1) continue;
+        let parsed = null;
+        try {
+          parsed = JSON.parse(raw.replace(/&quot;/g, '"'));
+        } catch (e) {}
+        const candidate = parsed && parsed.textToCopy ? String(parsed.textToCopy).trim() : '';
+        if (isLikelyWorkerId(candidate)) {
+          await GM.setValue(LAST_WORKER_ID_KEY, candidate);
+          return candidate;
+        }
+      }
+
+      const meBarId = document.querySelector('.me-bar .text-uppercase span')?.textContent?.trim() || '';
+      if (isLikelyWorkerId(meBarId)) {
+        await GM.setValue(LAST_WORKER_ID_KEY, meBarId);
+        return meBarId;
+      }
+    } catch (e) {}
+
+    try {
+      const M = document.documentElement ? document.documentElement.innerHTML : '';
       const H = [
         /"workerId"\s*:\s*"([^"]+)"/i,
         /"worker_id"\s*:\s*"([^"]+)"/i,
@@ -37,13 +72,18 @@
       ];
       for (const U of H) {
         const d = M.match(U);
-        if (d && d[1]) return d[1];
+        if (d && d[1] && isLikelyWorkerId(d[1])) {
+          const workerId = d[1].trim();
+          await GM.setValue(LAST_WORKER_ID_KEY, workerId);
+          return workerId;
+        }
       }
     } catch (o) {}
+
+    const cachedWorker = await GM.getValue(LAST_WORKER_ID_KEY, '');
+    if (isLikelyWorkerId(cachedWorker)) return cachedWorker;
     return 'UNKNOWN_WORKER';
   }
-
-  const J = 'AB2soft::V6Pro::PermanentKey';
 
   async function V(M, H) {
     const U = new TextEncoder();
@@ -115,15 +155,23 @@
   }
 
   async function B() {
-    const M = await P();
-    const H = 'AB2_AUTH::' + M;
-    const U = await GM.getValue(H, null);
+    const workerId = await P();
 
-    if (U) {
+    // Force one clean re-auth on this fixed version.
+    const schemaVersion = await GM.getValue(AUTH_SCHEMA_KEY, 0);
+    if (schemaVersion !== AUTH_SCHEMA_VERSION) {
+      await GM.setValue(AUTH_SLOT_KEY, null);
+      await GM.setValue(AUTH_SCHEMA_KEY, AUTH_SCHEMA_VERSION);
+    }
+
+    const slot = await GM.getValue(AUTH_SLOT_KEY, null);
+
+    // Fast path: already authorized for this worker ID.
+    if (isLikelyWorkerId(workerId) && slot && slot.workerId === workerId && slot.token) {
       try {
-        const i = await L(U, M);
-        if (i === 'OK') return true;
-      } catch (q) {}
+        const ok = await L(slot.token, workerId);
+        if (ok === 'OK') return true;
+      } catch (e) {}
     }
 
     const d = prompt('Enter AB2soft access code:');
@@ -139,8 +187,16 @@
       return false;
     }
 
-    const W = await V('OK', M);
-    await GM.setValue(H, W);
+    if (!isLikelyWorkerId(workerId)) {
+      // Do not persist auth to UNKNOWN_WORKER. User can run now, then bind on next load.
+      await GM.setValue(AUTH_SLOT_KEY, null);
+      alert('Worker ID not detected. Reload MTurk tasks page once to bind access permanently.');
+      return true;
+    }
+
+    const token = await V('OK', workerId);
+    await GM.setValue(AUTH_SLOT_KEY, { workerId, token, ts: Date.now() });
+    await GM.setValue(LAST_WORKER_ID_KEY, workerId);
     return true;
   }
 
@@ -149,9 +205,9 @@
 
   // Load encrypted payload with GM_xmlhttpRequest + retry.
   const PAYLOAD_URLS = [
-    "https://github.com/Vinylgeorge/400err/blob/main/real_script.enc.json"
+    'https://mrp-turk-app.tiiny.site/real_script.enc.json'
   ];
-  const PAYLOAD_PASS_KEY = "AB2_PAYLOAD_PASSWORD";
+  const PAYLOAD_PASS_KEY = 'AB2_PAYLOAD_PASSWORD';
 
   function requestTextWithRetry(url, maxAttempts = 5) {
     let attempt = 0;
@@ -159,7 +215,7 @@
       function run() {
         attempt += 1;
         GM_xmlhttpRequest({
-          method: "GET",
+          method: 'GET',
           url,
           nocache: true,
           timeout: 20000,
@@ -174,7 +230,7 @@
               resolve(r.responseText);
               return;
             }
-            reject(new Error("HTTP " + r.status + " at " + url + " (attempt " + attempt + ")"));
+            reject(new Error('HTTP ' + r.status + ' at ' + url + ' (attempt ' + attempt + ')'));
           },
           onerror: function () {
             if (attempt < maxAttempts) {
@@ -182,7 +238,7 @@
               setTimeout(run, waitMs);
               return;
             }
-            reject(new Error("Network/load error at " + url));
+            reject(new Error('Network/load error at ' + url));
           },
           ontimeout: function () {
             if (attempt < maxAttempts) {
@@ -190,7 +246,7 @@
               setTimeout(run, waitMs);
               return;
             }
-            reject(new Error("Timed out at " + url));
+            reject(new Error('Timed out at ' + url));
           }
         });
       }
@@ -213,8 +269,8 @@
   }
 
   async function decryptEncPayload(payload, password) {
-    if (!payload || payload.alg !== "AES-256-GCM" || payload.kdf !== "PBKDF2-SHA256") {
-      throw new Error("Invalid payload format.");
+    if (!payload || payload.alg !== 'AES-256-GCM' || payload.kdf !== 'PBKDF2-SHA256') {
+      throw new Error('Invalid payload format.');
     }
     const iter = Number(payload.iter || 120000);
     const salt = b64ToBytes(payload.salt);
@@ -224,21 +280,21 @@
     const cipherWithTag = joinBytes(data, tag);
 
     const baseKey = await crypto.subtle.importKey(
-      "raw",
+      'raw',
       new TextEncoder().encode(password),
-      "PBKDF2",
+      'PBKDF2',
       false,
-      ["deriveKey"]
+      ['deriveKey']
     );
     const aesKey = await crypto.subtle.deriveKey(
-      { name: "PBKDF2", salt, iterations: iter, hash: "SHA-256" },
+      { name: 'PBKDF2', salt, iterations: iter, hash: 'SHA-256' },
       baseKey,
-      { name: "AES-GCM", length: 256 },
+      { name: 'AES-GCM', length: 256 },
       false,
-      ["decrypt"]
+      ['decrypt']
     );
     const plainBuf = await crypto.subtle.decrypt(
-      { name: "AES-GCM", iv },
+      { name: 'AES-GCM', iv },
       aesKey,
       cipherWithTag
     );
@@ -246,10 +302,10 @@
   }
 
   async function getPayloadPassword() {
-    const cached = await GM.getValue(PAYLOAD_PASS_KEY, "");
+    const cached = await GM.getValue(PAYLOAD_PASS_KEY, '');
     if (cached) return cached;
-    const input = prompt("Enter encrypted script password:");
-    if (!input) throw new Error("No decryption password entered.");
+    const input = prompt('Enter encrypted script password:');
+    if (!input) throw new Error('No decryption password entered.');
     await GM.setValue(PAYLOAD_PASS_KEY, input);
     return input;
   }
@@ -260,15 +316,15 @@
       try {
         const body = await requestTextWithRetry(url);
         const trimmed = body.trim();
-        if (!trimmed || trimmed[0] === "<") {
-          throw new Error("URL returned HTML, not JSON: " + url);
+        if (!trimmed || trimmed[0] === '<') {
+          throw new Error('URL returned HTML, not JSON: ' + url);
         }
         return JSON.parse(trimmed);
       } catch (e) {
         errors.push(e && e.message ? e.message : String(e));
       }
     }
-    throw new Error(errors.join(" | "));
+    throw new Error(errors.join(' | '));
   }
 
   async function bootEncryptedScript() {
@@ -279,15 +335,15 @@
       try {
         sourceCode = await decryptEncPayload(payload, password);
       } catch (e) {
-        await GM.setValue(PAYLOAD_PASS_KEY, "");
-        password = prompt("Wrong password. Re-enter encrypted script password:");
-        if (!password) throw new Error("No decryption password entered.");
+        await GM.setValue(PAYLOAD_PASS_KEY, '');
+        password = prompt('Wrong password. Re-enter encrypted script password:');
+        if (!password) throw new Error('No decryption password entered.');
         await GM.setValue(PAYLOAD_PASS_KEY, password);
         sourceCode = await decryptEncPayload(payload, password);
       }
       eval(sourceCode); // direct eval keeps GM_* available
     } catch (e) {
-      alert("AB2soft load error: " + (e && e.message ? e.message : e));
+      alert('AB2soft load error: ' + (e && e.message ? e.message : e));
     }
   }
 
