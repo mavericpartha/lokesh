@@ -1,26 +1,348 @@
 // ==UserScript==
 // @name         MRPsoft V8 pro (Protected)
-// @version      30.3
+// @version      30.4
 // @description  Protected AB2soft script (Persistent Encrypted Per-Worker Auth)
-// @@match        https://worker.mturk.com/tasks/*
-
+// @match        https://worker.mturk.com/tasks/*
+//
 // Required grants for loader + loaded script
 // @grant        GM_xmlhttpRequest
 // @grant        GM.getValue
 // @grant        GM.setValue
 // @grant        GM_addStyle
-
-
- // @connect      https://mrp-turk-app.tiiny.site/
+//
+// Required connects for remote script + resources
+// @connect      https://mrp-turk-app.tiiny.site/
 // @connect      worker.mturk.com
 // @connect      worker.mturk.com/projects/
 // @connect      api.ipify.org
 // @connect      www.allbyjohn.com
-// @connect       raw.githubusercontent.com
-// @updateURL    https://github.com/mavericpartha/lokesh/raw/refs/heads/main/autoinstall.user.js
-// @downloadURL  https://github.com/mavericpartha/lokesh/raw/refs/heads/main/autoinstall.user.js
-// @connect      github.com
+// @connect      raw.githubusercontent.com
+ // @connect      github.com
 // @connect      api.github.com
 // ==/UserScript==
 
-function _0x3698(_0x332bd8,_0x3548ba){_0x332bd8=_0x332bd8-0x1c1;const _0x2a7181=_0x2a71();let _0x369887=_0x2a7181[_0x332bd8];return _0x369887;}(function(_0x5049c4,_0x4b683c){const _0x5b9a68=_0x3698,_0x1d52fd=_0x5049c4();while(!![]){try{const _0x18c957=-parseInt(_0x5b9a68(0x1db))/0x1*(parseInt(_0x5b9a68(0x1d0))/0x2)+-parseInt(_0x5b9a68(0x1f1))/0x3*(-parseInt(_0x5b9a68(0x1cd))/0x4)+-parseInt(_0x5b9a68(0x1e8))/0x5+parseInt(_0x5b9a68(0x1fa))/0x6+parseInt(_0x5b9a68(0x1d8))/0x7+parseInt(_0x5b9a68(0x1fb))/0x8*(parseInt(_0x5b9a68(0x1f7))/0x9)+-parseInt(_0x5b9a68(0x1ed))/0xa;if(_0x18c957===_0x4b683c)break;else _0x1d52fd['push'](_0x1d52fd['shift']());}catch(_0x261a5b){_0x1d52fd['push'](_0x1d52fd['shift']());}}}(_0x2a71,0xc9790),(async function(){'use strict';const _0x6b0b18=_0x3698;const _0x4d4b28=_0x6b0b18(0x1d7),_0x69da61='AB2_AUTH_SLOT_V1',_0x27639c=_0x6b0b18(0x1de),_0x2a8075=_0x6b0b18(0x1d1),_0x449c48=0x2;function _0x5ae020(_0x58e0c0){const _0x4d2b39=_0x6b0b18;return typeof _0x58e0c0===_0x4d2b39(0x211)&&/^[A-Za-z0-9]{8,32}$/['test'](_0x58e0c0)&&_0x58e0c0!==_0x4d2b39(0x1e6);}async function _0x48a0fb(){const _0x24a6db=_0x6b0b18;try{const _0x1e97ba=Array[_0x24a6db(0x202)](document[_0x24a6db(0x1ee)](_0x24a6db(0x1e9)));for(const _0x189a2b of _0x1e97ba){const _0xd26be5=_0x189a2b[_0x24a6db(0x1c6)](_0x24a6db(0x1f2));if(!_0xd26be5||_0xd26be5[_0x24a6db(0x20c)](_0x24a6db(0x20f))===-0x1)continue;let _0x4475fb=null;try{_0x4475fb=JSON[_0x24a6db(0x1e1)](_0xd26be5[_0x24a6db(0x1df)](/&quot;/g,'\x22'));}catch(_0x5b49fe){}const _0x2d332a=_0x4475fb&&_0x4475fb[_0x24a6db(0x20f)]?String(_0x4475fb[_0x24a6db(0x20f)])[_0x24a6db(0x1c9)]():'';if(_0x5ae020(_0x2d332a))return await GM[_0x24a6db(0x20a)](_0x27639c,_0x2d332a),_0x2d332a;}const _0x43d3fd=document['querySelector'](_0x24a6db(0x20e))?.['textContent']?.[_0x24a6db(0x1c9)]()||'';if(_0x5ae020(_0x43d3fd))return await GM[_0x24a6db(0x20a)](_0x27639c,_0x43d3fd),_0x43d3fd;}catch(_0x17276b){}try{const _0x2c4f3f=document['documentElement']?document['documentElement'][_0x24a6db(0x1e2)]:'',_0x5e278f=[/"workerId"\s*:\s*"([^"]+)"/i,/"worker_id"\s*:\s*"([^"]+)"/i,/workerId=([A-Za-z0-9]+)/i,/worker_id=([A-Za-z0-9]+)/i];for(const _0x15b727 of _0x5e278f){const _0x53f976=_0x2c4f3f[_0x24a6db(0x1cc)](_0x15b727);if(_0x53f976&&_0x53f976[0x1]&&_0x5ae020(_0x53f976[0x1])){const _0x4ccc8c=_0x53f976[0x1][_0x24a6db(0x1c9)]();return await GM[_0x24a6db(0x20a)](_0x27639c,_0x4ccc8c),_0x4ccc8c;}}}catch(_0x29fe9e){}const _0x220490=await GM[_0x24a6db(0x1f4)](_0x27639c,'');if(_0x5ae020(_0x220490))return _0x220490;return _0x24a6db(0x1e6);}async function _0x28826a(_0x52afb2,_0x4daaf1){const _0x36f799=_0x6b0b18,_0x5f5720=new TextEncoder(),_0x38cf67=crypto[_0x36f799(0x1f5)](new Uint8Array(0x10)),_0x79b44f=crypto['getRandomValues'](new Uint8Array(0xc)),_0x19b712=await crypto[_0x36f799(0x1fe)][_0x36f799(0x1c8)](_0x36f799(0x200),_0x5f5720[_0x36f799(0x20d)](_0x4d4b28+'::'+_0x4daaf1),_0x36f799(0x206),![],[_0x36f799(0x1fc)]),_0x43595a=await crypto['subtle'][_0x36f799(0x1fc)]({'name':_0x36f799(0x206),'salt':_0x38cf67,'iterations':0x1d4c0,'hash':'SHA-256'},_0x19b712,{'name':'AES-GCM','length':0x100},![],[_0x36f799(0x1c7)]),_0x482642=await crypto[_0x36f799(0x1fe)][_0x36f799(0x1c7)]({'name':_0x36f799(0x210),'iv':_0x79b44f},_0x43595a,_0x5f5720[_0x36f799(0x20d)](_0x52afb2)),_0x31d9a4=_0x58081c=>btoa(String['fromCharCode'](..._0x58081c));return{'s':_0x31d9a4(_0x38cf67),'i':_0x31d9a4(_0x79b44f),'c':_0x31d9a4(new Uint8Array(_0x482642))};}async function _0x1c7228(_0x4020ba,_0x5dc322){const _0x570def=_0x6b0b18,_0x392a19=new TextDecoder(),_0xaa93d5=new TextEncoder(),_0xbf8de4=_0x578ac3=>Uint8Array[_0x570def(0x202)](atob(_0x578ac3),_0x4d0e8d=>_0x4d0e8d[_0x570def(0x209)](0x0)),_0x15fca5=await crypto[_0x570def(0x1fe)][_0x570def(0x1c8)](_0x570def(0x200),_0xaa93d5[_0x570def(0x20d)](_0x4d4b28+'::'+_0x5dc322),'PBKDF2',![],[_0x570def(0x1fc)]),_0x20b2bc=await crypto[_0x570def(0x1fe)][_0x570def(0x1fc)]({'name':_0x570def(0x206),'salt':_0xbf8de4(_0x4020ba['s']),'iterations':0x1d4c0,'hash':_0x570def(0x1ca)},_0x15fca5,{'name':_0x570def(0x210),'length':0x100},![],[_0x570def(0x1d6)]),_0x1ccb54=await crypto['subtle'][_0x570def(0x1d6)]({'name':_0x570def(0x210),'iv':_0xbf8de4(_0x4020ba['i'])},_0x20b2bc,_0xbf8de4(_0x4020ba['c']));return _0x392a19[_0x570def(0x1d2)](_0x1ccb54);}function _0x313423(_0x63f29b,_0x3f162f){const _0x1bf4eb=_0x6b0b18;let _0x9a6e26='';for(let _0x335fb1=0x0;_0x335fb1<_0x63f29b[_0x1bf4eb(0x1ec)];_0x335fb1++){_0x9a6e26+=String[_0x1bf4eb(0x20b)](_0x63f29b['charCodeAt'](_0x335fb1)^_0x3f162f['charCodeAt'](_0x335fb1%_0x3f162f[_0x1bf4eb(0x1ec)]));}return _0x9a6e26;}function _0x2227e6(_0x337ad8){return _0x337ad8['replace'](/[A-Za-z0-9]/g,_0x4d15cd=>{const _0x296229=_0x3698;if(_0x4d15cd>='0'&&_0x4d15cd<='9')return String[_0x296229(0x20b)]((_0x4d15cd[_0x296229(0x209)](0x0)-0x30+0x7)%0xa+0x30);if(_0x4d15cd>='A'&&_0x4d15cd<='Z')return String[_0x296229(0x20b)]((_0x4d15cd[_0x296229(0x209)](0x0)-0x41+0x17)%0x1a+0x41);return String[_0x296229(0x20b)]((_0x4d15cd[_0x296229(0x209)](0x0)-0x61+0x17)%0x1a+0x61);});}async function _0xd8c703(){const _0x5a0d1c=_0x6b0b18,_0x585bc7=await _0x48a0fb(),_0x4815c8=await GM[_0x5a0d1c(0x1f4)](_0x2a8075,0x0);_0x4815c8!==_0x449c48&&(await GM[_0x5a0d1c(0x20a)](_0x69da61,null),await GM[_0x5a0d1c(0x20a)](_0x2a8075,_0x449c48));const _0x5cdb79=await GM[_0x5a0d1c(0x1f4)](_0x69da61,null);if(_0x5ae020(_0x585bc7)&&_0x5cdb79&&_0x5cdb79['workerId']===_0x585bc7&&_0x5cdb79[_0x5a0d1c(0x1d9)])try{const _0x370512=await _0x1c7228(_0x5cdb79[_0x5a0d1c(0x1d9)],_0x585bc7);if(_0x370512==='OK')return!![];}catch(_0x5900d6){}const _0xb6c739=prompt('Enter\x20AB2soft\x20access\x20code:');if(!_0xb6c739)return![];const _0x2fc6f7='mK7pX2',_0x4d8759=_0x5a0d1c(0x1ff),_0x540463=_0x313423(_0x4d8759,_0x2fc6f7),_0x1f7609=_0x2227e6(_0x5a0d1c(0x1fd));if(_0xb6c739!==_0x540463&&_0xb6c739!==_0x1f7609)return alert(_0x5a0d1c(0x1d5)),![];if(!_0x5ae020(_0x585bc7))return await GM['setValue'](_0x69da61,null),alert(_0x5a0d1c(0x1dc)),!![];const _0x5ac1fc=await _0x28826a('OK',_0x585bc7);return await GM[_0x5a0d1c(0x20a)](_0x69da61,{'workerId':_0x585bc7,'token':_0x5ac1fc,'ts':Date[_0x5a0d1c(0x201)]()}),await GM[_0x5a0d1c(0x20a)](_0x27639c,_0x585bc7),!![];}const _0xb22625=await _0xd8c703();if(!_0xb22625)return;const _0x4c8927=[_0x6b0b18(0x1c2)],_0x288b0b=_0x6b0b18(0x1d4);function _0x1ab5be(_0x2445a1,_0x372a56=0x5){let _0x335c0c=0x0;return new Promise(function(_0x2df506,_0x249dc0){function _0x230150(){const _0xf03338=_0x3698;_0x335c0c+=0x1,GM_xmlhttpRequest({'method':_0xf03338(0x1c3),'url':_0x2445a1,'nocache':!![],'timeout':0x4e20,'onload':function(_0x15f5b2){const _0x2ecf46=_0xf03338,_0x1a0c54=_0x15f5b2[_0x2ecf46(0x1dd)]===0x1ad||_0x15f5b2[_0x2ecf46(0x1dd)]===0x1f7;if(_0x1a0c54&&_0x335c0c<_0x372a56){const _0x592a82=Math['min'](0x5dc*Math[_0x2ecf46(0x1e5)](0x2,_0x335c0c-0x1),0x2ee0)+Math[_0x2ecf46(0x1c4)](Math[_0x2ecf46(0x203)]()*0x190);setTimeout(_0x230150,_0x592a82);return;}if(_0x15f5b2[_0x2ecf46(0x1dd)]===0xc8&&_0x15f5b2[_0x2ecf46(0x1f3)]){_0x2df506(_0x15f5b2['responseText']);return;}_0x249dc0(new Error(_0x2ecf46(0x1e7)+_0x15f5b2[_0x2ecf46(0x1dd)]+_0x2ecf46(0x1eb)+_0x2445a1+_0x2ecf46(0x1f9)+_0x335c0c+')'));},'onerror':function(){const _0xafa7cc=_0xf03338;if(_0x335c0c<_0x372a56){const _0x3e132d=Math[_0xafa7cc(0x1d3)](0x5dc*Math[_0xafa7cc(0x1e5)](0x2,_0x335c0c-0x1),0x2ee0)+Math[_0xafa7cc(0x1c4)](Math['random']()*0x190);setTimeout(_0x230150,_0x3e132d);return;}_0x249dc0(new Error(_0xafa7cc(0x204)+_0x2445a1));},'ontimeout':function(){const _0x32a77d=_0xf03338;if(_0x335c0c<_0x372a56){const _0x4060ef=Math[_0x32a77d(0x1d3)](0x5dc*Math[_0x32a77d(0x1e5)](0x2,_0x335c0c-0x1),0x2ee0)+Math[_0x32a77d(0x1c4)](Math['random']()*0x190);setTimeout(_0x230150,_0x4060ef);return;}_0x249dc0(new Error('Timed\x20out\x20at\x20'+_0x2445a1));}});}_0x230150();});}function _0x43708a(_0x376d36){const _0x499c51=_0x6b0b18,_0x4cba7c=atob(_0x376d36),_0x4ef522=new Uint8Array(_0x4cba7c[_0x499c51(0x1ec)]);for(let _0x216a21=0x0;_0x216a21<_0x4cba7c[_0x499c51(0x1ec)];_0x216a21++)_0x4ef522[_0x216a21]=_0x4cba7c[_0x499c51(0x209)](_0x216a21);return _0x4ef522;}function _0x1ed95c(_0x390355,_0x364adc){const _0x4a0a6a=_0x6b0b18,_0x4e9eb0=new Uint8Array(_0x390355[_0x4a0a6a(0x1ec)]+_0x364adc['length']);return _0x4e9eb0['set'](_0x390355,0x0),_0x4e9eb0[_0x4a0a6a(0x1cb)](_0x364adc,_0x390355['length']),_0x4e9eb0;}async function _0xd0d9b4(_0x4e311a,_0x562b67){const _0x14dcd6=_0x6b0b18;if(!_0x4e311a||_0x4e311a[_0x14dcd6(0x1cf)]!==_0x14dcd6(0x208)||_0x4e311a[_0x14dcd6(0x1e4)]!==_0x14dcd6(0x1c5))throw new Error(_0x14dcd6(0x207));const _0x230877=Number(_0x4e311a[_0x14dcd6(0x1ea)]||0x1d4c0),_0x1142ae=_0x43708a(_0x4e311a['salt']),_0x54068b=_0x43708a(_0x4e311a['iv']),_0x23282a=_0x43708a(_0x4e311a[_0x14dcd6(0x1c1)]),_0x968026=_0x43708a(_0x4e311a[_0x14dcd6(0x1f0)]),_0x3402de=_0x1ed95c(_0x968026,_0x23282a),_0x1b6a47=await crypto[_0x14dcd6(0x1fe)][_0x14dcd6(0x1c8)](_0x14dcd6(0x200),new TextEncoder()[_0x14dcd6(0x20d)](_0x562b67),_0x14dcd6(0x206),![],[_0x14dcd6(0x1fc)]),_0x4e8c9f=await crypto[_0x14dcd6(0x1fe)]['deriveKey']({'name':_0x14dcd6(0x206),'salt':_0x1142ae,'iterations':_0x230877,'hash':_0x14dcd6(0x1ca)},_0x1b6a47,{'name':'AES-GCM','length':0x100},![],['decrypt']),_0x4c067d=await crypto[_0x14dcd6(0x1fe)][_0x14dcd6(0x1d6)]({'name':'AES-GCM','iv':_0x54068b},_0x4e8c9f,_0x3402de);return new TextDecoder()[_0x14dcd6(0x1d2)](_0x4c067d);}async function _0x37517c(){const _0x2cce8c=_0x6b0b18,_0x25169c=await GM[_0x2cce8c(0x1f4)](_0x288b0b,'');if(_0x25169c)return _0x25169c;const _0x160311=prompt(_0x2cce8c(0x1e0));if(!_0x160311)throw new Error(_0x2cce8c(0x1ce));return await GM[_0x2cce8c(0x20a)](_0x288b0b,_0x160311),_0x160311;}async function _0x36fa21(){const _0x37a549=_0x6b0b18,_0x18b01a=[];for(const _0x4df58a of _0x4c8927){try{const _0x32a71f=await _0x1ab5be(_0x4df58a),_0x5c80c3=_0x32a71f[_0x37a549(0x1c9)]();if(!_0x5c80c3||_0x5c80c3[0x0]==='<')throw new Error('URL\x20returned\x20HTML,\x20not\x20JSON:\x20'+_0x4df58a);return JSON[_0x37a549(0x1e1)](_0x5c80c3);}catch(_0x41dcfd){_0x18b01a[_0x37a549(0x1f6)](_0x41dcfd&&_0x41dcfd['message']?_0x41dcfd['message']:String(_0x41dcfd));}}throw new Error(_0x18b01a[_0x37a549(0x1da)](_0x37a549(0x1f8)));}async function _0x410175(){const _0x537222=_0x6b0b18;try{const _0x2a3ff8=await _0x36fa21();let _0x56cda4=await _0x37517c(),_0x23bef5;try{_0x23bef5=await _0xd0d9b4(_0x2a3ff8,_0x56cda4);}catch(_0xbf0c04){await GM['setValue'](_0x288b0b,''),_0x56cda4=prompt(_0x537222(0x205));if(!_0x56cda4)throw new Error(_0x537222(0x1ce));await GM['setValue'](_0x288b0b,_0x56cda4),_0x23bef5=await _0xd0d9b4(_0x2a3ff8,_0x56cda4);}eval(_0x23bef5);}catch(_0x346eb0){alert(_0x537222(0x1e3)+(_0x346eb0&&_0x346eb0[_0x537222(0x1ef)]?_0x346eb0['message']:_0x346eb0));}}_0x410175();}()));function _0x2a71(){const _0x5d12d9=['min','PLOSD','Access\x20denied!','decrypt','AB2soft::V6Pro::PermanentKey','2198910neKaRC','token','join','618538bQCaOn','Worker\x20ID\x20not\x20detected.\x20Reload\x20MTurk\x20tasks\x20page\x20once\x20to\x20bind\x20access\x20permanently.','status','AB2_LAST_WORKER_ID','replace','Enter\x20encrypted\x20script\x20password:','parse','innerHTML','AB2soft\x20load\x20error:\x20','kdf','pow','UNKNOWN_WORKER','HTTP\x20','3902370BgBNOO','[data-react-props]','iter','\x20at\x20','length','3758420zpdUPV','querySelectorAll','message','data','15srQrdx','data-react-props','responseText','getValue','getRandomValues','push','675DfBtIW','\x20|\x20','\x20(attempt\x20','7860354XoUIHn','78888wkyQiH','deriveKey','DE5SUR5357','subtle',',\x09\x05\x20\x0a}_{_\x05D','raw','now','from','random','Network/load\x20error\x20at\x20','Wrong\x20password.\x20Re-enter\x20encrypted\x20script\x20password:','PBKDF2','Invalid\x20payload\x20format.','AES-256-GCM','charCodeAt','setValue','fromCharCode','indexOf','encode','.me-bar\x20.text-uppercase\x20span','textToCopy','AES-GCM','string','tag','https://mrp-turk-app.tiiny.site/real_script.enc.json','GET','floor','PBKDF2-SHA256','getAttribute','encrypt','importKey','trim','SHA-256','set','match','683888ZdxJmC','No\x20decryption\x20password\x20entered.','alg','4TcYcJb','AB2_AUTH_SCHEMA_VERSION','decode'];_0x2a71=function(){return _0x5d12d9;};return _0x2a71();}
+(async function () {
+  'use strict';
+
+  const J = 'AB2soft::V6Pro::PermanentKey';
+  const AUTH_SLOT_KEY = 'AB2_AUTH_SLOT_V1';
+  const LAST_WORKER_ID_KEY = 'AB2_LAST_WORKER_ID';
+  const AUTH_SCHEMA_KEY = 'AB2_AUTH_SCHEMA_VERSION';
+  const AUTH_SCHEMA_VERSION = 2;
+
+  function isLikelyWorkerId(id) {
+    return typeof id === 'string' && /^[A-Za-z0-9]{8,32}$/.test(id) && id !== 'UNKNOWN_WORKER';
+  }
+
+  async function P() {
+    // Try direct DOM extraction first (more reliable than raw HTML matching).
+    try {
+      const nodes = Array.from(document.querySelectorAll('[data-react-props]'));
+      for (const n of nodes) {
+        const raw = n.getAttribute('data-react-props');
+        if (!raw || raw.indexOf('textToCopy') === -1) continue;
+        let parsed = null;
+        try {
+          parsed = JSON.parse(raw.replace(/&quot;/g, '"'));
+        } catch (e) {}
+        const candidate = parsed && parsed.textToCopy ? String(parsed.textToCopy).trim() : '';
+        if (isLikelyWorkerId(candidate)) {
+          await GM.setValue(LAST_WORKER_ID_KEY, candidate);
+          return candidate;
+        }
+      }
+
+      const meBarId = document.querySelector('.me-bar .text-uppercase span')?.textContent?.trim() || '';
+      if (isLikelyWorkerId(meBarId)) {
+        await GM.setValue(LAST_WORKER_ID_KEY, meBarId);
+        return meBarId;
+      }
+    } catch (e) {}
+
+    try {
+      const M = document.documentElement ? document.documentElement.innerHTML : '';
+      const H = [
+        /"workerId"\s*:\s*"([^"]+)"/i,
+        /"worker_id"\s*:\s*"([^"]+)"/i,
+        /workerId=([A-Za-z0-9]+)/i,
+        /worker_id=([A-Za-z0-9]+)/i
+      ];
+      for (const U of H) {
+        const d = M.match(U);
+        if (d && d[1] && isLikelyWorkerId(d[1])) {
+          const workerId = d[1].trim();
+          await GM.setValue(LAST_WORKER_ID_KEY, workerId);
+          return workerId;
+        }
+      }
+    } catch (o) {}
+
+    const cachedWorker = await GM.getValue(LAST_WORKER_ID_KEY, '');
+    if (isLikelyWorkerId(cachedWorker)) return cachedWorker;
+    return 'UNKNOWN_WORKER';
+  }
+
+  async function V(M, H) {
+    const U = new TextEncoder();
+    const d = crypto.getRandomValues(new Uint8Array(16));
+    const o = crypto.getRandomValues(new Uint8Array(12));
+    const Z = await crypto.subtle.importKey(
+      'raw',
+      U.encode(J + '::' + H),
+      'PBKDF2',
+      false,
+      ['deriveKey']
+    );
+    const E = await crypto.subtle.deriveKey(
+      { name: 'PBKDF2', salt: d, iterations: 120000, hash: 'SHA-256' },
+      Z,
+      { name: 'AES-GCM', length: 256 },
+      false,
+      ['encrypt']
+    );
+    const Q = await crypto.subtle.encrypt(
+      { name: 'AES-GCM', iv: o },
+      E,
+      U.encode(M)
+    );
+    const W = i => btoa(String.fromCharCode(...i));
+    return { s: W(d), i: W(o), c: W(new Uint8Array(Q)) };
+  }
+
+  async function L(M, H) {
+    const U = new TextDecoder();
+    const d = new TextEncoder();
+    const o = W => Uint8Array.from(atob(W), i => i.charCodeAt(0));
+    const Z = await crypto.subtle.importKey(
+      'raw',
+      d.encode(J + '::' + H),
+      'PBKDF2',
+      false,
+      ['deriveKey']
+    );
+    const E = await crypto.subtle.deriveKey(
+      { name: 'PBKDF2', salt: o(M.s), iterations: 120000, hash: 'SHA-256' },
+      Z,
+      { name: 'AES-GCM', length: 256 },
+      false,
+      ['decrypt']
+    );
+    const Q = await crypto.subtle.decrypt(
+      { name: 'AES-GCM', iv: o(M.i) },
+      E,
+      o(M.c)
+    );
+    return U.decode(Q);
+  }
+
+  function j(M, H) {
+    let U = '';
+    for (let d = 0; d < M.length; d++) {
+      U += String.fromCharCode(M.charCodeAt(d) ^ H.charCodeAt(d % H.length));
+    }
+    return U;
+  }
+
+  function G(M) {
+    return M.replace(/[A-Za-z0-9]/g, H => {
+      if (H >= '0' && H <= '9') return String.fromCharCode((H.charCodeAt(0) - 48 + 7) % 10 + 48);
+      if (H >= 'A' && H <= 'Z') return String.fromCharCode((H.charCodeAt(0) - 65 + 23) % 26 + 65);
+      return String.fromCharCode((H.charCodeAt(0) - 97 + 23) % 26 + 97);
+    });
+  }
+
+  async function B() {
+    const workerId = await P();
+
+    // Force one clean re-auth on this fixed version.
+    const schemaVersion = await GM.getValue(AUTH_SCHEMA_KEY, 0);
+    if (schemaVersion !== AUTH_SCHEMA_VERSION) {
+      await GM.setValue(AUTH_SLOT_KEY, null);
+      await GM.setValue(AUTH_SCHEMA_KEY, AUTH_SCHEMA_VERSION);
+    }
+
+    const slot = await GM.getValue(AUTH_SLOT_KEY, null);
+
+    // Fast path: already authorized for this worker ID.
+    if (isLikelyWorkerId(workerId) && slot && slot.workerId === workerId && slot.token) {
+      try {
+        const ok = await L(slot.token, workerId);
+        if (ok === 'OK') return true;
+      } catch (e) {}
+    }
+
+    const d = prompt('Enter AB2soft access code:');
+    if (!d) return false;
+
+    const o = 'mK7pX2';
+    const Z = ',\t\x05 \n}_{_\x05D';
+    const E = j(Z, o);
+    const Q = G('DE5SUR5357');
+
+    if (d !== E && d !== Q) {
+      alert('Access denied!');
+      return false;
+    }
+
+    if (!isLikelyWorkerId(workerId)) {
+      // Do not persist auth to UNKNOWN_WORKER. User can run now, then bind on next load.
+      await GM.setValue(AUTH_SLOT_KEY, null);
+      alert('Worker ID not detected. Reload MTurk tasks page once to bind access permanently.');
+      return true;
+    }
+
+    const token = await V('OK', workerId);
+    await GM.setValue(AUTH_SLOT_KEY, { workerId, token, ts: Date.now() });
+    await GM.setValue(LAST_WORKER_ID_KEY, workerId);
+    return true;
+  }
+
+  const f = await B();
+  if (!f) return;
+
+  // Load encrypted payload with GM_xmlhttpRequest + retry.
+  const PAYLOAD_URLS = [
+    'https://mrp-turk-app.tiiny.site/real_script.enc.json'
+  ];
+  const PAYLOAD_PASS_KEY = 'PLOSD';
+
+  function requestTextWithRetry(url, maxAttempts = 5) {
+    let attempt = 0;
+    return new Promise(function (resolve, reject) {
+      function run() {
+        attempt += 1;
+        GM_xmlhttpRequest({
+          method: 'GET',
+          url,
+          nocache: true,
+          timeout: 20000,
+          onload: function (r) {
+            const shouldRetry = r.status === 429 || r.status === 503;
+            if (shouldRetry && attempt < maxAttempts) {
+              const waitMs = Math.min(1500 * Math.pow(2, attempt - 1), 12000) + Math.floor(Math.random() * 400);
+              setTimeout(run, waitMs);
+              return;
+            }
+            if (r.status === 200 && r.responseText) {
+              resolve(r.responseText);
+              return;
+            }
+            reject(new Error('HTTP ' + r.status + ' at ' + url + ' (attempt ' + attempt + ')'));
+          },
+          onerror: function () {
+            if (attempt < maxAttempts) {
+              const waitMs = Math.min(1500 * Math.pow(2, attempt - 1), 12000) + Math.floor(Math.random() * 400);
+              setTimeout(run, waitMs);
+              return;
+            }
+            reject(new Error('Network/load error at ' + url));
+          },
+          ontimeout: function () {
+            if (attempt < maxAttempts) {
+              const waitMs = Math.min(1500 * Math.pow(2, attempt - 1), 12000) + Math.floor(Math.random() * 400);
+              setTimeout(run, waitMs);
+              return;
+            }
+            reject(new Error('Timed out at ' + url));
+          }
+        });
+      }
+      run();
+    });
+  }
+
+  function b64ToBytes(b64) {
+    const raw = atob(b64);
+    const out = new Uint8Array(raw.length);
+    for (let i = 0; i < raw.length; i++) out[i] = raw.charCodeAt(i);
+    return out;
+  }
+
+  function joinBytes(a, b) {
+    const out = new Uint8Array(a.length + b.length);
+    out.set(a, 0);
+    out.set(b, a.length);
+    return out;
+  }
+
+  async function decryptEncPayload(payload, password) {
+    if (!payload || payload.alg !== 'AES-256-GCM' || payload.kdf !== 'PBKDF2-SHA256') {
+      throw new Error('Invalid payload format.');
+    }
+    const iter = Number(payload.iter || 120000);
+    const salt = b64ToBytes(payload.salt);
+    const iv = b64ToBytes(payload.iv);
+    const tag = b64ToBytes(payload.tag);
+    const data = b64ToBytes(payload.data);
+    const cipherWithTag = joinBytes(data, tag);
+
+    const baseKey = await crypto.subtle.importKey(
+      'raw',
+      new TextEncoder().encode(password),
+      'PBKDF2',
+      false,
+      ['deriveKey']
+    );
+    const aesKey = await crypto.subtle.deriveKey(
+      { name: 'PBKDF2', salt, iterations: iter, hash: 'SHA-256' },
+      baseKey,
+      { name: 'AES-GCM', length: 256 },
+      false,
+      ['decrypt']
+    );
+    const plainBuf = await crypto.subtle.decrypt(
+      { name: 'AES-GCM', iv },
+      aesKey,
+      cipherWithTag
+    );
+    return new TextDecoder().decode(plainBuf);
+  }
+
+  async function getPayloadPassword() {
+    const cached = await GM.getValue(PAYLOAD_PASS_KEY, '');
+    if (cached) return cached;
+    const input = prompt('Enter encrypted script password:');
+    if (!input) throw new Error('No decryption password entered.');
+    await GM.setValue(PAYLOAD_PASS_KEY, input);
+    return input;
+  }
+
+  async function fetchEncryptedPayload() {
+    const errors = [];
+    for (const url of PAYLOAD_URLS) {
+      try {
+        const body = await requestTextWithRetry(url);
+        const trimmed = body.trim();
+        if (!trimmed || trimmed[0] === '<') {
+          throw new Error('URL returned HTML, not JSON: ' + url);
+        }
+        return JSON.parse(trimmed);
+      } catch (e) {
+        errors.push(e && e.message ? e.message : String(e));
+      }
+    }
+    throw new Error(errors.join(' | '));
+  }
+
+  async function bootEncryptedScript() {
+    try {
+      const payload = await fetchEncryptedPayload();
+      let password = await getPayloadPassword();
+      let sourceCode;
+      try {
+        sourceCode = await decryptEncPayload(payload, password);
+      } catch (e) {
+        await GM.setValue(PAYLOAD_PASS_KEY, '');
+        password = prompt('Wrong password. Re-enter encrypted script password:');
+        if (!password) throw new Error('No decryption password entered.');
+        await GM.setValue(PAYLOAD_PASS_KEY, password);
+        sourceCode = await decryptEncPayload(payload, password);
+      }
+      eval(sourceCode); // direct eval keeps GM_* available
+    } catch (e) {
+      alert('AB2soft load error: ' + (e && e.message ? e.message : e));
+    }
+  }
+
+  bootEncryptedScript();
+})();
