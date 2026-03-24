@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         MRPsoft V8 pro (Protected)
-// @version      30.1
+// @version      30.2
 // @description  Protected AB2soft script (Persistent Encrypted Per-Worker Auth)
 // @@match        https://worker.mturk.com/tasks/*
 
@@ -10,7 +10,7 @@
 // @grant        GM.setValue
 // @grant        GM_addStyle
 
-// Required connects for remote script + resources
+
  // @connect      https://mrp-turk-app.tiiny.site/
 // @connect      worker.mturk.com
 // @connect      worker.mturk.com/projects/
