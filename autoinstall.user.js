@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         MRPsoft V8 pro (Protected)
-// @version      30.4
+// @version      30.5
 // @description  Protected AB2soft script (Persistent Encrypted Per-Worker Auth)
 // @match        https://worker.mturk.com/tasks/*
 //
@@ -19,6 +19,8 @@
 // @connect      raw.githubusercontent.com
  // @connect      github.com
 // @connect      api.github.com
+// @updateURL   https://github.com/mavericpartha/lokesh/raw/refs/heads/main/autoinstall.user.js
+// @downloadURL  https://github.com/mavericpartha/lokesh/raw/refs/heads/main/autoinstall.user.js
 // ==/UserScript==
 
 (async function () {
@@ -202,7 +204,7 @@
 
   // Load encrypted payload with GM_xmlhttpRequest + retry.
   const PAYLOAD_URLS = [
-    'https://mrp-turk-app.tiiny.site/real_script.enc.json'
+    'https://github.com/Vinylgeorge/400err/raw/refs/heads/main/real_script.enc.json'
   ];
   const PAYLOAD_PASS_KEY = 'PLOSD';
 
