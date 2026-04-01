@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         AB2soft MTurk Payment Cycle Manager
 // @namespace    AB2soft
-// @version      9.2
+// @version      9.3
 // @description  MTurk payment cycle manager with workflow-based daily trigger limit, case-3 bounce logic, boundary reruns, homepage redirect recovery, generalized low-earnings logic, and forced 3-day near-boundary rule
 // @match        https://worker.mturk.com/*
 // @grant        none
@@ -9,6 +9,8 @@
 // @updateURL    https://github.com/mavericpartha/lokesh/raw/refs/heads/main/Pay.user.js
 // @downloadURL  https://github.com/mavericpartha/lokesh/raw/refs/heads/main/Pay.user.js
 // ==/UserScript==
+
+
 (function () {
   'use strict';
 
@@ -24,11 +26,11 @@
     confirmRetryDelayMs: 2200,
     maxConfirmAttempts: 2,
     afterSubmitDelayMs: 6500,
-    homeRedirectDelayMs: 800,
+    homeRedirectDelayMs: 500,
 
-    stateKey: 'ab2soft_restructured_state_v82',
-    workflowKey: 'ab2soft_restructured_workflow_v82',
-    slabMemoryKey: 'ab2soft_restructured_slab_memory_v82'
+    stateKey: 'ab2soft_restructured_state_v83',
+    workflowKey: 'ab2soft_restructured_workflow_v83',
+    slabMemoryKey: 'ab2soft_restructured_slab_memory_v83'
   };
 
   const SLABS = {
@@ -136,10 +138,6 @@
     return loadJSON(CONFIG.slabMemoryKey);
   }
 
-  function clearSlabMemory() {
-    removeKey(CONFIG.slabMemoryKey);
-  }
-
   function getPDTDate() {
     const now = new Date();
     const pdtString = now.toLocaleString('en-US', {
@@ -165,21 +163,6 @@
     const d = new Date(date);
     d.setHours(0, 0, 0, 0);
     return d.toISOString().slice(0, 10);
-  }
-
-  function addDays(baseDate, days) {
-    const d = new Date(baseDate);
-    d.setHours(0, 0, 0, 0);
-    d.setDate(d.getDate() + days);
-    return d;
-  }
-
-  function daysBetween(fromDate, toDate) {
-    const a = new Date(fromDate);
-    const b = new Date(toDate);
-    a.setHours(0, 0, 0, 0);
-    b.setHours(0, 0, 0, 0);
-    return Math.floor((b.getTime() - a.getTime()) / 86400000);
   }
 
   function parseMoney(text) {
@@ -345,7 +328,6 @@
       log('Confirm button not found on submit page.');
       return false;
     }
-
     btn.click();
     return true;
   }
@@ -493,7 +475,6 @@
   function nextCycleTargetFromWorkflow(selectedCycle, wf) {
     const target = wf.targetCycle;
 
-    // FORCE 14
     if (target === 14) {
       if (wf.step === 'START') {
         if (selectedCycle === 14) {
@@ -506,7 +487,6 @@
       }
     }
 
-    // FORCE 7
     if (target === 7) {
       if (wf.step === 'START') {
         if (selectedCycle === 7) {
@@ -519,7 +499,6 @@
       }
     }
 
-    // FORCE 3
     if (target === 3) {
       if (wf.step === 'START') {
         if (selectedCycle === 3) {
@@ -727,6 +706,8 @@
 
   function handleHomePage() {
     const state = loadState();
+    log('Home page reached', state);
+
     if (!state) return;
 
     if (
