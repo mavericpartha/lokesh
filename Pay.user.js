@@ -214,7 +214,7 @@
   function getEarningSlab(earnings) {
     if (earnings >= 20) return SLABS.S20_PLUS;
     if (earnings >= 8) return SLABS.S8_TO_19;
-    if (earnings > 3) return SLABS.S3_TO_7;
+    if (earnings > 3 && earnings <= 7.99) return SLABS.S3_TO_7;
     return SLABS.S0_TO_3;
   }
 
