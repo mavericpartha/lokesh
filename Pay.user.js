@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         AB2soft MTurk Payment Cycle Manager
 // @namespace    AB2soft
-// @version      9.5
+// @version      9.6
 // @match        https://worker.mturk.com/*
 // @grant        none
 // @run-at       document-idle
@@ -54,7 +54,7 @@
     return root.querySelector(selector);
   }
 
-  function showBanner(message, color = '#1565c0') {
+    function showBanner(message, color = '#1565c0') {
     const id = 'ab2soft-cycle-banner';
     let el = document.getElementById(id);
 
