@@ -1,14 +1,13 @@
 // ==UserScript==
 // @name         AB2soft MTurk Payment Cycle Manager
 // @namespace    AB2soft
-// @version      9.7
+// @version      9.8
 // @match        https://worker.mturk.com/*
 // @grant        none
 // @run-at       document-idle
 // @updateURL    https://github.com/mavericpartha/lokesh/raw/refs/heads/main/Pay.user.js
 // @downloadURL  https://github.com/mavericpartha/lokesh/raw/refs/heads/main/Pay.user.js
 // ==/UserScript==
-
 
 
 (function () {
@@ -28,9 +27,9 @@
     afterSubmitDelayMs: 6500,
     homeRedirectDelayMs: 500,
 
-    stateKey: 'ab2soft_dynamic_state_v92',
-    workflowKey: 'ab2soft_dynamic_workflow_v92',
-    slabMemoryKey: 'ab2soft_dynamic_slab_memory_v92'
+    stateKey: 'ab2soft_dynamic_state_v93',
+    workflowKey: 'ab2soft_dynamic_workflow_v93',
+    slabMemoryKey: 'ab2soft_dynamic_slab_memory_v93'
   };
 
   const SLABS = {
@@ -167,6 +166,7 @@
 
   function parseDate(text) {
     if (!text) return null;
+
     const m = text.match(/\b([A-Z][a-z]{2}\s+\d{1,2}(?:,\s*\d{4})?)\b/);
     if (!m) return null;
 
@@ -353,7 +353,7 @@
     }, CONFIG.confirmRetryDelayMs);
   }
 
-  function buildContext(earnings, transferDate, currentCycle) {
+  function buildContext(earnings, transferDate) {
     const baseDate = today();
     return {
       today: baseDate,
@@ -361,7 +361,6 @@
       earnings,
       transferDate,
       transferDateYMD: formatYMD(transferDate),
-      currentCycle,
       isOneDayBeforeTransfer: isOneDayBeforeTransfer(transferDate),
       periodId: getCyclePeriodId(baseDate),
       window: getWindow(baseDate),
@@ -582,12 +581,6 @@
       return;
     }
 
-    const currentCycle = getSelectedCycleFromMemoryOrPage();
-    if (!currentCycle) {
-      showBanner('Could not detect current cycle.', '#c62828');
-      return;
-    }
-
     if (state && state.phase === 'VERIFY_ON_EARNINGS') {
       const newTransferDate = getTransferDate();
       const oldTransferDate = state.originalTransferDate ? new Date(state.originalTransferDate + 'T00:00:00') : null;
@@ -604,7 +597,7 @@
       clearState();
     }
 
-    const ctx = buildContext(earnings, transferDate, currentCycle);
+    const ctx = buildContext(earnings, transferDate);
     const wf = loadWorkflow();
 
     if (wf && wf.active && wf.periodId === ctx.periodId) {
@@ -667,25 +660,6 @@
         }, CONFIG.redirectDelayMs);
       }
     }
-  }
-
-  function getSelectedCycleFromMemoryOrPage() {
-    if (isPaymentSchedulePage()) {
-      return getSelectedCycle();
-    }
-
-    const wf = loadWorkflow();
-    const state = loadState();
-    if (wf?.active && typeof wf.targetCycle === 'number') {
-      const last = wf.lastMove?.to;
-      if (last) return last;
-    }
-    if (state?.nextCycle) return state.nextCycle;
-    return readCurrentCycleViaSchedulePageFallback();
-  }
-
-  function readCurrentCycleViaSchedulePageFallback() {
-    return null;
   }
 
   function handlePaymentSchedulePage() {
