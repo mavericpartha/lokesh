@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         AB2soft MTurk Payment Cycle Manager
 // @namespace    AB2soft
-// @version      9.
+// @version      9.0  
 // @match        https://worker.mturk.com/*
 // @grant        none
 // @run-at       document-idle
