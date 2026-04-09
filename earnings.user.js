@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         🔒 MTurk Earnings Report
 // @namespace    ab2soft.secure
-// @version      9.0
+// @version      9.2
 // @match        https://worker.mturk.com/earnings*
 // @grant        GM_getValue
 // @grant        GM_setValue
@@ -13,9 +13,9 @@
   // -------------------------
   // CONFIG
   // -------------------------
-  const SHEET_CSV = 'https://docs.google.com/spreadsheets/d/1RU_hAAxyza7cxpyce6-ePCuUQh52VmW9EgcTqli1oA8/export?format=csv&gid=0';
-  const FIREBASE_APP_JS = 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-  const FIRESTORE_JS = 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+   const SHEET_CSV = 'https://docs.google.com/spreadsheets/d/1RU_hAAxyza7cxpyce6-ePCuUQh52VmW9EgcTqli1oA8/export?format=csv&gid=0';
+   const FIREBASE_APP_JS = 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+   const FIRESTORE_JS = 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
   const FIREBASE_CFG = {
     apiKey: "AIzaSyCCtBCAJvQCDj8MXb2w90qYUqRrENIIGIQ",
