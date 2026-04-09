@@ -2,7 +2,6 @@
 // @name         Carelin Auto Answer
 // @namespace    MTurkHelpers
 // @version      5
-// @description  For Q1/Q2/Q3 pages: click first choice in each question, then submit with human-like delay.
 // @match        https://www.mturkcontent.com/*
 // @match        https://*.mturkcontent.com/*
 // @updateURL    https://github.com/mavericpartha/lokesh/raw/refs/heads/main/carelin.user.js
