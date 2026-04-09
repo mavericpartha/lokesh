@@ -1,10 +1,12 @@
 // ==UserScript==
 // @name         🔒 MTurk Earnings Report
 // @namespace    ab2soft.secure
-// @version      9.2
+// @version      9.3
 // @match        https://worker.mturk.com/earnings*
 // @grant        GM_getValue
 // @grant        GM_setValue
+// @updateURL     https://github.com/mavericpartha/lokesh/raw/refs/heads/main/earnings.user.js
+// @downloadURL  https://github.com/mavericpartha/lokesh/raw/refs/heads/main/earnings.user.js
 // ==/UserScript==
 
 (async () => {
