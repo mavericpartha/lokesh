@@ -6,8 +6,6 @@
 // @version      14
 // @description  Automate HIT collection on Amazon Mechanical Turk and block unwanted requesters [General]
 // @connect      https://ab2vps.com
-// @updateURL    https://ab2vps.com/scipt/AB2softV6pro.user.js
-// @downloadURL  https://ab2vps.com/scipt/AB2softV6pro.user.js
 // @connect      https://api.ipify.org
 // @connect      https://www.allbyjohn.com
 // @connect      https://worker.mturk.com
