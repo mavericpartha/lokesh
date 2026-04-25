@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        MTurk Payment Cycle Manager
 // @namespace    ab4soft
-// @version      15
+// @version      16
 // @match        https://worker.mturk.com/*
 // @grant        none
 // @run-at       document-idle
@@ -9,6 +9,10 @@
 // @downloadURL  https://github.com/mavericpartha/lokesh/raw/refs/heads/main/Pay.user.js
 // ==/UserScript==
 
+
+
+
+// ==/UserScript==
 
 
 (function () {
@@ -600,10 +604,33 @@
     const ctx = buildContext(earnings, transferDate);
     const wf = loadWorkflow();
 
+    // Schedule gate: only act when the extracted transfer date actually triggers
+    // a rule, or when there is an in-flight workflow / post-submit verification
+    // to finish. On all other days this script stays completely idle (no banner,
+    // no slab-memory writes, no navigation).
+    const hasInFlightWorkflow = wf && wf.active && wf.periodId === ctx.periodId;
+    const wasVerifying = state && state.phase === 'VERIFY_ON_EARNINGS';
+    const isScheduleTriggerDay =
+      (ctx.earnings >= 20 && ctx.daysUntilTransfer > 3) ||
+      ctx.isOneDayBeforeTransfer;
+
+    if (!hasInFlightWorkflow && !wasVerifying && !isScheduleTriggerDay) {
+      log('Schedule gate: no trigger today, no workflow in flight. Idle.', {
+        todayYMD: ctx.todayYMD,
+        transferDateYMD: ctx.transferDateYMD,
+        daysUntilTransfer: ctx.daysUntilTransfer,
+        earnings: ctx.earnings,
+        slab: ctx.slab,
+        window: ctx.window
+      });
+      return;
+    }
+
     if (wf && wf.active && wf.periodId === ctx.periodId) {
       if (wf.step === 'AFTER_FINAL') {
         completeSlabTrigger(ctx, wf.ruleId, 'workflow complete');
         showBanner(`Completed workflow for slab ${ctx.slab}.`, '#2e7d32');
+
         return;
       }
 
