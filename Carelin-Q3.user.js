@@ -1,12 +1,12 @@
 // ==UserScript==
 // @name         Carelin Auto Answer
 // @namespace    MTurkHelpers
-// @version      6
+// @version      6.1
 // @description  For Q1/Q2/Q3 pages: human-like reading scroll + first-choice click in each question, then submit.
 // @match        https://www.mturkcontent.com/*
 // @match        https://*.mturkcontent.com/*
-// @updateURL    https://github.com/mavericpartha/lokesh/raw/refs/heads/main/carelin.user.js
-// @downloadURL  https://github.com/mavericpartha/lokesh/raw/refs/heads/main/carelin.user.js
+// @updateURL    https://github.com/mavericpartha/lokesh/raw/refs/heads/main/Carelin-Q3.user.js
+// @downloadURL  https://github.com/mavericpartha/lokesh/raw/refs/heads/main/Carelin-Q3.user.js
 // @grant        none
 // @run-at       document-idle
 // ==/UserScript==
@@ -15,8 +15,8 @@
   "use strict";
 
   const CONFIG = {
-    BETWEEN_QUESTIONS_MIN_MS: 1400,
-    BETWEEN_QUESTIONS_MAX_MS: 2800,
+     BETWEEN_QUESTIONS_MIN_MS: 1400,
+     BETWEEN_QUESTIONS_MAX_MS: 2800,
     BEFORE_SUBMIT_MIN_MS: 2200,
     BEFORE_SUBMIT_MAX_MS: 3800,
     POLL_MS: 450,
