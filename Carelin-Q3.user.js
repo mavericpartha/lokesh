@@ -1,7 +1,8 @@
 // ==UserScript==
 // @name         Carelin Auto Answer
 // @namespace    MTurkHelpers
-// @version      5
+// @version      6
+// @description  For Q1/Q2/Q3 pages: human-like reading scroll + first-choice click in each question, then submit.
 // @match        https://www.mturkcontent.com/*
 // @match        https://*.mturkcontent.com/*
 // @updateURL    https://github.com/mavericpartha/lokesh/raw/refs/heads/main/carelin.user.js
@@ -19,6 +20,16 @@
     BEFORE_SUBMIT_MIN_MS: 2200,
     BEFORE_SUBMIT_MAX_MS: 3800,
     POLL_MS: 450,
+    // Humanlike-scroll tuning. Each "scroll-to-target" is broken into a few
+    // smaller hops with eased animation and tiny random over/under-shoots so
+    // the trace doesn't look like a single setTimeout-jump.
+    SCROLL_HOP_MIN_MS: 220,
+    SCROLL_HOP_MAX_MS: 520,
+    SCROLL_HOPS_MIN: 2,
+    SCROLL_HOPS_MAX: 4,
+    SCROLL_OVERSHOOT_PX: 40,
+    SCROLL_READ_MIN_MS: 600,
+    SCROLL_READ_MAX_MS: 1400,
     DEBUG: false
   };
 
@@ -36,6 +47,9 @@
     const max = Math.max(min, Number(maxMs) || min);
     return Math.floor(min + Math.random() * (max - min + 1));
   }
+
+  function randInt(min, max) { return Math.floor(min + Math.random() * (max - min + 1)); }
+  function randSign() { return Math.random() < 0.5 ? -1 : 1; }
 
   function isMturkContentHost() {
     const host = location.hostname.toLowerCase();
@@ -176,6 +190,133 @@
     return false;
   }
 
+  // -------------------- Humanlike scrolling --------------------
+  // Scrolls the document to a target element using:
+  //   * 2-4 hops (real readers don't snap to a question in one motion)
+  //   * Eased motion via requestAnimationFrame (CSS smooth-scroll has no
+  //     awaitable hook; we use rAF + sleep for deterministic timing)
+  //   * Small over/undershoot so the scroll position isn't exactly the
+  //     target on the first try
+  //   * A short "reading" pause at the end of each scroll
+  // No keyboard or mouse-wheel events are needed: most page-behavior
+  // detectors treat smooth window.scrollTo as user scrolling.
+
+  function sleep(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
+
+  function easeInOutQuad(t) {
+    return t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+  }
+
+  function getScrollY() {
+    return window.scrollY || window.pageYOffset ||
+      (document.documentElement && document.documentElement.scrollTop) || 0;
+  }
+
+  function getMaxScrollY() {
+    const docEl = document.documentElement || document.body;
+    return Math.max(0, (docEl.scrollHeight || 0) - window.innerHeight);
+  }
+
+  function clampY(y) { return Math.max(0, Math.min(y, getMaxScrollY())); }
+
+  // Animate a single scroll hop from current Y to targetY over duration ms.
+  function animateScrollHop(targetY, durationMs) {
+    return new Promise(function (resolve) {
+      const startY = getScrollY();
+      const endY = clampY(targetY);
+      if (Math.abs(endY - startY) < 2 || durationMs <= 0) {
+        try { window.scrollTo(0, endY); } catch (e) {}
+        return resolve();
+      }
+      const startTs = performance.now();
+      function frame(ts) {
+        const t = Math.min(1, (ts - startTs) / durationMs);
+        const k = easeInOutQuad(t);
+        const y = startY + (endY - startY) * k;
+        try { window.scrollTo(0, y); } catch (e) {}
+        if (t >= 1) return resolve();
+        requestAnimationFrame(frame);
+      }
+      requestAnimationFrame(frame);
+    });
+  }
+
+  // Scrolls so that `el` sits at ~30% from the top of the viewport, after
+  // a few human-paced hops with random jitter.
+  async function humanScrollToElement(el) {
+    if (!el || !el.getBoundingClientRect) return;
+    const rect = el.getBoundingClientRect();
+    const targetCenter = getScrollY() + rect.top - Math.floor(window.innerHeight * 0.3);
+    const finalY = clampY(targetCenter);
+    const startY = getScrollY();
+    const distance = finalY - startY;
+    if (Math.abs(distance) < 12) {
+      // Already close enough -- a tiny fidget motion still helps look human.
+      const jitter = randInt(8, 24) * randSign();
+      await animateScrollHop(getScrollY() + jitter, randInt(180, 320));
+      await sleep(randInt(120, 260));
+      await animateScrollHop(finalY, randInt(180, 320));
+      return;
+    }
+    const hops = randInt(CONFIG.SCROLL_HOPS_MIN, CONFIG.SCROLL_HOPS_MAX);
+    let cumY = startY;
+    for (let i = 1; i <= hops; i++) {
+      const fraction = i / hops;
+      // Slightly bias progress so first hops are smaller (people accelerate
+      // into a scroll then ease out).
+      const eased = Math.pow(fraction, 1.15);
+      let hopTarget = startY + distance * eased;
+      // Add a small per-hop jitter (intentional over/undershoot).
+      if (i < hops) {
+        hopTarget += randInt(-CONFIG.SCROLL_OVERSHOOT_PX, CONFIG.SCROLL_OVERSHOOT_PX);
+      }
+      await animateScrollHop(hopTarget, randInt(CONFIG.SCROLL_HOP_MIN_MS, CONFIG.SCROLL_HOP_MAX_MS));
+      cumY = hopTarget;
+      // Brief micro-pause between hops (eye-fix moments).
+      await sleep(randInt(80, 220));
+    }
+    // Final correction: snap-eased to the precise target.
+    await animateScrollHop(finalY, randInt(180, 320));
+    // "Reading" pause at the destination.
+    await sleep(randInt(CONFIG.SCROLL_READ_MIN_MS, CONFIG.SCROLL_READ_MAX_MS));
+  }
+
+  // Tiny back-and-forth wobble to look like the worker re-checking the
+  // current section before clicking.
+  async function readingFidget() {
+    const baseY = getScrollY();
+    const jitter1 = randInt(15, 50) * randSign();
+    await animateScrollHop(baseY + jitter1, randInt(160, 300));
+    await sleep(randInt(120, 260));
+    await animateScrollHop(baseY, randInt(160, 300));
+    await sleep(randInt(180, 360));
+  }
+
+  // Scroll to the question by name, then run a small read-fidget.
+  async function scrollToQuestion(questionName) {
+    const radio = document.querySelector(`input[type="radio"][name="${questionName}"]`);
+    let anchor = null;
+    if (radio) {
+      // Prefer the question's container row if we can find one -- looks
+      // more like reading the question text than focusing on a radio.
+      anchor = radio.closest("tr, .question, .panel, .card, fieldset, label, p, div") || radio;
+    }
+    if (anchor) {
+      await humanScrollToElement(anchor);
+      // Some pages have a long question stem; do one tiny re-read wobble.
+      if (Math.random() < 0.6) await readingFidget();
+    }
+  }
+
+  async function scrollToSubmit() {
+    const btn = submitButton();
+    if (btn) {
+      await humanScrollToElement(btn);
+    }
+  }
+
+  // -------------------- Main automation --------------------
+
   function startAutomation() {
     const assignmentId = getAssignmentId();
     let state = loadState(assignmentId);
@@ -205,6 +346,55 @@
       });
     }
 
+    // One-shot top-of-page glance the first time we wake up. Helps mimic
+    // a real worker who lands on the page and skims it before answering.
+    let pageWarmedUp = false;
+    async function warmUpScroll() {
+      if (pageWarmedUp) return;
+      pageWarmedUp = true;
+      try {
+        // Glance from current pos up to top, brief read pause, then back.
+        const startY = getScrollY();
+        await animateScrollHop(0, randInt(280, 520));
+        await sleep(randInt(280, 600));
+        await animateScrollHop(Math.min(startY, 200), randInt(220, 420));
+        await sleep(randInt(180, 360));
+      } catch (e) {}
+    }
+
+    async function answerStep(questionName, nextStep, minMs, maxMs) {
+      busy = true;
+      try {
+        await warmUpScroll();
+        await scrollToQuestion(questionName);
+        const first = getFirstVisibleChoice(questionName);
+        if (first) {
+          markRadio(first);
+          if (clickElement(first)) {
+            log("Clicked", questionName, "first choice");
+            scheduleNext(nextStep, minMs, maxMs);
+          }
+        }
+      } finally {
+        busy = false;
+      }
+    }
+
+    async function doSubmitStep() {
+      busy = true;
+      try {
+        await scrollToSubmit();
+        // One last "looking it over" wobble before clicking submit.
+        await readingFidget();
+        if (canSubmitNow() && trySubmit()) {
+          saveState(assignmentId, { step: 4, done: true, nextActionAt: Date.now() });
+          log("Submitted form");
+        }
+      } finally {
+        busy = false;
+      }
+    }
+
     function run() {
       if (busy) return;
       const now = Date.now();
@@ -217,53 +407,21 @@
 
       if (now < state.nextActionAt) return;
 
-      busy = true;
-
       if (state.step === 0) {
-        const q1First = getFirstVisibleChoice("q1");
-        if (q1First) {
-          markRadio(q1First);
-          if (clickElement(q1First)) {
-            log("Clicked q1 first choice");
-            scheduleNext(1, CONFIG.BETWEEN_QUESTIONS_MIN_MS, CONFIG.BETWEEN_QUESTIONS_MAX_MS);
-          }
-        }
-        busy = false;
+        answerStep("q1", 1, CONFIG.BETWEEN_QUESTIONS_MIN_MS, CONFIG.BETWEEN_QUESTIONS_MAX_MS);
         return;
       }
-
       if (state.step === 1) {
-        const q2First = getFirstVisibleChoice("q2");
-        if (q2First) {
-          markRadio(q2First);
-          if (clickElement(q2First)) {
-            log("Clicked q2 first choice");
-            scheduleNext(2, CONFIG.BETWEEN_QUESTIONS_MIN_MS, CONFIG.BETWEEN_QUESTIONS_MAX_MS);
-          }
-        }
-        busy = false;
+        answerStep("q2", 2, CONFIG.BETWEEN_QUESTIONS_MIN_MS, CONFIG.BETWEEN_QUESTIONS_MAX_MS);
         return;
       }
-
       if (state.step === 2) {
-        const q3First = getFirstVisibleChoice("q3");
-        if (q3First) {
-          markRadio(q3First);
-          if (clickElement(q3First)) {
-            log("Clicked q3 first choice");
-            scheduleNext(3, CONFIG.BEFORE_SUBMIT_MIN_MS, CONFIG.BEFORE_SUBMIT_MAX_MS);
-          }
-        }
-        busy = false;
+        answerStep("q3", 3, CONFIG.BEFORE_SUBMIT_MIN_MS, CONFIG.BEFORE_SUBMIT_MAX_MS);
         return;
       }
-
       if (state.step === 3) {
-        if (canSubmitNow() && trySubmit()) {
-          saveState(assignmentId, { step: 4, done: true, nextActionAt: Date.now() });
-          log("Submitted form");
-        }
-        busy = false;
+        doSubmitStep();
+        return;
       }
     }
 
